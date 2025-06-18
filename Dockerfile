@@ -5,12 +5,12 @@ COPY environment.yml .
 RUN conda env create -f environment.yml
 
 # Activate the Conda environment
-RUN echo "conda activate a7-env" >> ~/.bashrc
-ENV PATH="$PATH:/opt/conda/envs/a7-env/bin"
+RUN echo "conda activate base_gis" >> ~/.bashrc
+ENV PATH="$PATH:/opt/conda/envs/base_gis/bin"
 
 # Create a non-root user and switch to that user
 RUN useradd -m gisuser
-USER daskuser
+USER gisuser
 
 # Set working directory
 WORKDIR /home/gisuser

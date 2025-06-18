@@ -1,0 +1,25 @@
+name: base_gis
+channels:
+  - conda-forge
+dependencies:
+  - jupyterlab=4.2.5
+  - pystac-client=0.7.5
+  - planetary-computer=1.0.0
+  - leafmap=0.38.5
+  - matplotlib
+  - dask=2024.9.1
+  - dask-labextension
+  - dask-geopandas=0.4.2
+  - distributed=2024.9.1
+  - rioxarray=0.17.0
+  - xarray=2024.10.0
+  - pooch=1.8.2
+  - scipy=1.14.1
+  - netcdf4=1.7.2
+  - geopandas=1.0.1
+  - geodatasets=2024.8.0
+  - cartopy=0.22.0
+  - shapely=2.0.5
+  - boto3 #=1.35.54
+  - bottleneck
+  - stackstac=0.5.0

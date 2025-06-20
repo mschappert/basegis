@@ -11,6 +11,7 @@ NOTE:
 
 
 * Be aware of your hardware limitations (ram (memory), CPU, disk space)
+  * Unsure? - search `system information` in windows search bar
 
 # Getting Started (Initial)
 ##  Docker Setup
@@ -205,6 +206,9 @@ Like any software (and GIS in general) things never go as planned, here are some
 
 Dask
 - restart kernel, rerun everything
+
+# Available Workflows
+* Pre-processing for MSPA
 
 
 

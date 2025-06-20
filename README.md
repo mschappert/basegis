@@ -1,10 +1,11 @@
 # Welcome to basegis
-The goal is to provide a resource for learning how to practically use Docker, and python workflows for people with exisitng GIS knowledge but are new to implementing Docker, VS Code, GIS in python.
+The goal is to provide a resource for learning how to practically use Docker, and python workflows for people with existing GIS knowledge but are new to implementing Docker, VS Code, GIS in python. This is by no means and exhaustive tutorial, but a way to get up and running.
 
-This Docker container contains the basic packages needed for GIS as well as setting up parallel processing, shortening the time, and managing hardware resouces for large data processing.
+The Docker container provided contains the basic packages needed for GIS as well as setting up parallel processing, shortening the time, and managing hardware resources for large data processing.
 
-NOTE* This is written for Windows users and may not be the same for MacOS
-NOTE* Docker Image is about 7 Gb, so make sure you have enough disk space!
+NOTE: 
+* This is written for Windows users and may not be the same for MacOS
+* Docker Image is about 7 Gb, so make sure you have enough disk space!
 
 # Checklist
 
@@ -21,15 +22,16 @@ NOTE* Docker Image is about 7 Gb, so make sure you have enough disk space!
 ## GitHub Setup
 
 # Creating your own container/project from scratch (not required)
-* Cheklist: (Bare minimum)
+* Checklist: (Bare minimum)
   * Dockerfile
   * environment.yml
   * README.md
 
 * Instructions are written for VS Code
+* All files needed to create a container can be made in WSL command line
 
 ## 1. Create environment file
-* VS Code > R-click > new file > `NAME.yml` (environment.yml is often used)
+* VS Code > R-click > new file > `NAME.yml` (`environment.yml` is often used)
 ```
 name: base_gis
 channels:
@@ -88,7 +90,7 @@ EXPOSE 8787
 CMD ["jupyter", "lab", "--ip=0.0.0.0"]
 ```
 ## 4. Build docker image
-* Make sure docker is open on desktop and in WSL by running 'docker'
+* Make sure Docker is open on desktop and in WSL by running 'docker'
 * Might need to use `docker buildx build` if `docker build` does not work
 ```
 docker build -t <IMAGE_NAME>
@@ -104,14 +106,17 @@ docker run <IMAGE ID or NAME:TAG>
 ```
 ### Option 2: Mount and run image
 * Connects local machine to image
-
+```
+  cd /mnt/c/Users/username/wherever_repository_is/basegis/
+  docker run -p 8888:8888 -p 8787:8787 -v $(pwd):/home/gisuser/data/ -it basegis # Do not alter this line
+```
 
 # Let's Start Coding!
 
 ## Quick Start
 1. Open WSL > use cd to wd
 ```
-cd /mnt/c/Users/username/where_ever_reposity_is/basegis/
+cd /mnt/c/Users/username/wherever_repository_is/basegis/
 ```
 2. Build Docker Image
 ```
@@ -121,21 +126,22 @@ docker build -t basegis .
   1. Links dockerfile to the environment file that was created for this project (basegis)
 3. Run Image
 ```
-  cd /mnt/c/Users/username/where_ever_reposity_is/basegis/
-  docker run -p 8888:8888 -p 8787:8787 -v $(pwd):/home/gisuser/data/ -it basegis # Do not alter this line
+  cd /mnt/c/Users/username/wherever_repository_is/basegis/
+  docker run -p 8888:8888 -p 8787:8787 -v $(pwd):/home/gisuser/data/ -it basegis
 ```
+* Need a more detailed step-by-step? Jump down to `Running your Docker container (using basegis)`
 
-## Clone repositry
+## Clone repository
 
 
 
 ## Running your Docker container (using basegis)
 * Make sure docker is open on desktop and in WSL by running `docker` (Docker's menu should show up)
-* Windows users may need to open Docker application before initiaing Docker in WSL
+* Windows users may need to open Docker application before initiating Docker in WSL
 
 1. Set working directory (wd) (Example)
 ```
-cd /mnt/c/Users/username/where_ever_reposity_is/basegis/
+cd /mnt/c/Users/username/wherever_repository_is/basegis/
 
 ```
 2. Build image using `environment.yml` file
@@ -150,10 +156,11 @@ docker images
 3. Run Docker image
   * Mount and run image (connects local machine to image)
   * NOTE: You can mount additional locations, however this tutorial will not adderess these nuances
+  * DO NOT alter the second line of code (For the sake of this tutorial)
 ```
-cd /mnt/c/Users/username/where_ever_reposity_is/basegis/
+cd /mnt/c/Users/username/wherever_repository_is/basegis/
 
-docker run -p 8888:8888 -p 8787:8787 -v $(pwd):/home/gisuser/data/ -it basegis # Do not alter this line
+docker run -p 8888:8888 -p 8787:8787 -v $(pwd):/home/gisuser/data/ -it basegis 
 
 ```
 4. Copy and paste link in browser. If using VS Code see next section for instructions
@@ -168,14 +175,16 @@ To access the server, open this file in a browser:
         http#://e06ad175546e:8888/lab?token=126f07d295ed5c284b9c7687b2278b579f79a6a2c6e17a24
         http#://129.0.0.1:8888/lab?token=126f07d295ed5c284b9c7687b2278b579f79a6a2c6e17a24
 ```
-* In the upper-right corner of the notbook select `Kernel` >
+* In the upper-right corner of the notebook select `Kernel` >
 * Click `Select Another Kernel...` >
 * Click `Existing Jupyter Server...`>
 * Paste URL from Docker container
 
 # A Few Helpful Commands
 See what files are in a folder
+```
 ls
+```
 
 Exit Container (in WSL)
 ctrl + C

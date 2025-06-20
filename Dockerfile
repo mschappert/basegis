@@ -13,7 +13,7 @@ RUN useradd -m gisuser
 USER gisuser
 
 # Set working directory
-WORKDIR /home/gisuser
+WORKDIR /home/gisuser/code/
 
 # Expose the JupyterLab port
 EXPOSE 8888

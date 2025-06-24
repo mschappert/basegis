@@ -3,6 +3,16 @@ import os
 import arcpy
 import multiprocessing
 
+
+#raster to use for clipping
+# D:/Mikayla_RA/RA_S25/basegis/code/data/tiff_P_geotiff_recoded/1991_P_recoded.tif
+
+
+
+
+
+
+
 # ===== CONFIGURATION =====
 arcpy.env.overwriteOutput = True
 arcpy.env.parallelProcessingFactor = "75%"  # Use 75% of CPU cores

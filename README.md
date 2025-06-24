@@ -207,10 +207,6 @@ Like any software (and GIS in general) things never go as planned, here are some
 Dask
 - restart kernel, rerun everything
 
-# Available Workflows
-* Pre-processing for MSPA
-
-
 
 # Sources/Documentation
 

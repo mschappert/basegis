@@ -18,11 +18,13 @@ import arcpy
 import multiprocessing
 import re
 import time
+from functools import partial
 
 # ArcPy Configurations
 arcpy.env.overwriteOutput = True
-arcpy.env.parallelProcessingFactor = "200%"
+arcpy.env.parallelProcessingFactor = "0" # "200%"
 arcpy.CheckOutExtension("Spatial")
+cores = multiprocessing.cpu_count() - 1  # Leave 1 core free
 
 # ArcPy Environments
 # arcpy.env.snapRaster = "path/to/reference_raster.tif"
@@ -75,13 +77,30 @@ def process_rasters(process_func, input_dir, **kwargs):
     arcpy.env.workspace = input_dir
     rasters = arcpy.ListRasters()
     print(f"Processing {len(rasters)}...")
+
+    # with multiprocessing.Pool(processes=cores) as pool:
+    # results = []
+    # for raster in rasters:
+    #     input_path = os.path.join(input_dir, raster)
+    #     # Pass arguments as keyword arguments
+    #     results.append(pool.apply_async(process_func, (input_path,), kwargs))
     
-    outputs = []
-    for raster in rasters:
-        input_path = os.path.join(input_dir, raster)
-        result = process_func(input_path, **kwargs)
-        outputs.append(result)
+    # outputs = [r.get() for r in results]
+    
+    # outputs = []
+    # for raster in rasters:
+    #     input_path = os.path.join(input_dir, raster)
+    #     result = process_func(input_path, **kwargs)
+    #     outputs.append(result)
+    # success_count = sum(1 for p in outputs if p)
+
+    input_paths = [os.path.join(input_dir, r) for r in rasters]
+    # Use partial to fix constant kwargs for process_func
+    func = partial(process_func, **kwargs)
+    with multiprocessing.Pool(processes=cores) as pool:
+        outputs = pool.map(func, input_paths)
     success_count = sum(1 for p in outputs if p)
+
     print(f"Process complete: {success_count}/{len(rasters)} succeeded")
     return outputs
     
@@ -103,19 +122,19 @@ def clip_rasters (input_raster = clip_in, output_dir = clip_out, clip_mask = cli
         print(f"Clip error: {str(e)}")
         return None
    
-def rc_rasters(input_raster = rc_in, type = rc_type):
+def rc_rasters(input_raster = rc_in, rc_type = rc_type):
     try:
         basename = os.path.basename(input_raster)
         year = get_year(basename)
 
         # remap based off type
-        if type == "edge":
+        if rc_type == "edge":
             output_path = os.path.join(edge_rc_out, f"{year}_rc_edge.tif")
             # remap = arcpy.sa.RemapValue([[3, 1],
             #                              [103, 1]])
             out_raster = arcpy.sa.Con((arcpy.sa.Raster(input_raster) == 3) | (arcpy.sa.Raster(input_raster) == 103), 1, 0)
-        elif type == "area":
-            output_path = os.path.join(edge_rc_out, f"{year}_rc_area.tif")
+        elif rc_type == "area":
+            output_path = os.path.join(area_rc_out, f"{year}_rc_area.tif")
             # remap = arcpy.sa.RemapValue([[3, 1],
             #                              [103, 1],
             #                              [17, 1],
@@ -164,35 +183,35 @@ def moving_window(input_raster = None, output_dir = mw_out, type = mw_type, radi
 if __name__ == "__main__":
     print("Starting Processing")
 
-    ## Run clip stage
-    print("Starting Clip")
-    clip_start = time.time()
-    clip_results = process_rasters(
-        clip_rasters, 
-        clip_in, 
-        output_dir = clip_out, 
-        clip_mask=clip_mask
-    )
-    clip_duration = time.time() - clip_start
-    print(f"Clip completed in {clip_duration:.2f} seconds")
+    # ## Run clip stage
+    # print("Starting Clip")
+    # clip_start = time.time()
+    # clip_results = process_rasters(
+    #     clip_rasters, 
+    #     clip_in, 
+    #     output_dir = clip_out, 
+    #     clip_mask=clip_mask
+    # )
+    # clip_duration = time.time() - clip_start
+    # print(f"Clip completed in {clip_duration:.2f} seconds")
     
-    ## Run reclassification stage
-    print("Staring Reclassification")
-    rc_start = time.time()
-    rc_results = process_rasters(
-        rc_rasters, 
-        rc_in, 
-        type = rc_type
-    )
-    rc_duration = time.time() - rc_start
-    print(f"Reclassification completed in {rc_duration:.2f} seconds")
+    # ## Run reclassification stage
+    # print("Staring Reclassification")
+    # rc_start = time.time()
+    # rc_results = process_rasters(
+    #     rc_rasters, 
+    #     rc_in, 
+    #     rc_type = rc_type
+    # )
+    # rc_duration = time.time() - rc_start
+    # print(f"Reclassification completed in {rc_duration:.2f} seconds")
     
     ## Run moving window stage
     print("Starting Moving Window")
     mw_start = time.time()
     mw_results = process_rasters(
         moving_window, 
-        edge_mw_in, 
+        edge_mw_in,         # change this as needed
         output_dir = mw_out, 
         type = mw_type, 
         radius = mw_radius, 
@@ -201,6 +220,6 @@ if __name__ == "__main__":
     mw_duration = time.time() - mw_start
     print(f"Moving window completed in {mw_duration:.2f} seconds")
 
-    ## Total processing time
+    # ## Total processing time
     # total_time = time.time() - clip_start
     # print(f"\nTotal processing time: {total_time:.2f} seconds")

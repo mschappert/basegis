@@ -10,19 +10,21 @@
 # Notes
 # multiprocessing.Pool : is not needed since clip, reclassify and focal statistics support parallel processing factor
 # remap : should in theory be the commented out code, however background values were not being properly set to 0 so Con was used
+# location for arcpy environment: C:\MyArcGISPro\bin\Python\envs\arcgispro-py3\python.exe
+# location for arcpy idle: C:\MyArcGISPro\bin\Python\envs\arcgispro-py3\Lib\idlelib\idle.bat
 ##########
-
 
 import os
 import arcpy
 import multiprocessing
 import re
 import time
+import sys
 from functools import partial
 
 # ArcPy Configurations
 arcpy.env.overwriteOutput = True
-arcpy.env.parallelProcessingFactor = "0" # "200%"
+arcpy.env.parallelProcessingFactor = "200" #"0" # "200%"- use 0 if using processing pool
 arcpy.CheckOutExtension("Spatial")
 cores = multiprocessing.cpu_count() - 1  # Leave 1 core free
 
@@ -56,9 +58,9 @@ mw_out = r"D:\Mikayla_RA\RA_S25\Time_Series\mw"
 
 # Parameters that change
 ## RC
-rc_type = "edge"  # "edge" or "area"
+rc_type = "area"  # "edge" or "area"
 ## MW
-mw_type = "edge"  # "edge", "area", or "patchnum"
+mw_type = "area"  # "edge", "area", or "patchnum"
 mw_radius = 500
 stat = "SUM"  # variety
 
@@ -78,28 +80,30 @@ def process_rasters(process_func, input_dir, **kwargs):
     rasters = arcpy.ListRasters()
     print(f"Processing {len(rasters)}...")
 
+    # original
     # with multiprocessing.Pool(processes=cores) as pool:
-    # results = []
+    #     results = []
     # for raster in rasters:
     #     input_path = os.path.join(input_dir, raster)
     #     # Pass arguments as keyword arguments
     #     results.append(pool.apply_async(process_func, (input_path,), kwargs))
-    
     # outputs = [r.get() for r in results]
     
-    # outputs = []
-    # for raster in rasters:
-    #     input_path = os.path.join(input_dir, raster)
-    #     result = process_func(input_path, **kwargs)
-    #     outputs.append(result)
-    # success_count = sum(1 for p in outputs if p)
-
-    input_paths = [os.path.join(input_dir, r) for r in rasters]
-    # Use partial to fix constant kwargs for process_func
-    func = partial(process_func, **kwargs)
-    with multiprocessing.Pool(processes=cores) as pool:
-        outputs = pool.map(func, input_paths)
+    ## for using built in parallel processing
+    outputs = []
+    for raster in rasters:
+        input_path = os.path.join(input_dir, raster)
+        result = process_func(input_path, **kwargs)
+        outputs.append(result)
     success_count = sum(1 for p in outputs if p)
+
+    # for using processing pool instead of built in parallel processing
+    # input_paths = [os.path.join(input_dir, r) for r in rasters]
+    # # Use partial to fix constant kwargs for process_func
+    # func = partial(process_func, **kwargs)
+    # with multiprocessing.Pool(processes=cores) as pool:
+    #     outputs = pool.map(func, input_paths)
+    # success_count = sum(1 for p in outputs if p)
 
     print(f"Process complete: {success_count}/{len(rasters)} succeeded")
     return outputs
@@ -149,6 +153,7 @@ def rc_rasters(input_raster = rc_in, rc_type = rc_type):
             ################ if it doesn't fit in the if/else - set it to stop/ print: RC type not defined, skipping files        
         # reclassify
         if not arcpy.Exists(output_path):
+            # to be used when using RemapValue
             # reclass = arcpy.sa.Reclassify(input_raster, "VALUE", remap, "DATA") # setting to "DATA = sets all else to 0"
             # reclass.save(output_path)
             out_raster.save(output_path)
@@ -211,7 +216,7 @@ if __name__ == "__main__":
     mw_start = time.time()
     mw_results = process_rasters(
         moving_window, 
-        edge_mw_in,         # change this as needed
+        area_mw_in,         # change this as needed
         output_dir = mw_out, 
         type = mw_type, 
         radius = mw_radius, 

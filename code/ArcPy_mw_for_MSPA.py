@@ -12,8 +12,14 @@
 # remap : should in theory be the commented out code, however background values were not being properly set to 0 so Con was used
 # location for arcpy environment: C:\MyArcGISPro\bin\Python\envs\arcgispro-py3\python.exe
 # location for arcpy idle: C:\MyArcGISPro\bin\Python\envs\arcgispro-py3\Lib\idlelib\idle.bat
-##########
 
+# Tools used
+# Extract by Mask (Raster Clip): https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/extract-by-mask.htm
+# Remap: https://pro.arcgis.com/en/pro-app/latest/arcpy/spatial-analyst/remap.htm
+# Con: https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/extract-by-mask.htm
+# RegionGroup: https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/region-group.htms
+# Focal Statistics: https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/focal-statistics.htm
+##########
 import os
 import arcpy
 import multiprocessing
@@ -22,6 +28,7 @@ import time
 import sys
 from functools import partial
 
+##########
 # ArcPy Configurations
 arcpy.env.overwriteOutput = True
 arcpy.env.parallelProcessingFactor = "200" #"0" # "200%"- use 0 if using processing pool
@@ -37,20 +44,19 @@ cores = multiprocessing.cpu_count() - 1  # Leave 1 core free
 arcpy.env.pyramid = "NONE"
 arcpy.env.rasterStatistics = "NONE"
 
-# Clip parameters
+##########
+# Folder Directories
+# Clip
 clip_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
 clip_mask = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
 clip_out = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
-
-# Reclassification parameters
-########### should set up remap values here instead of inside of the function - i was lazy 
-#remap 1 =
-# remap 2 = 
+# Reclassification
 rc_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
 edge_rc_out = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
 area_rc_out = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
-
-# Moving window parameters
+# RegionGroup
+rg_out = "D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
+# Moving window
 edge_mw_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
 area_mw_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
 pn_mw_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
@@ -59,10 +65,19 @@ mw_out = r"D:\Mikayla_RA\RA_S25\Time_Series\mw"
 # Parameters that change
 ## RC
 rc_type = "area"  # "edge" or "area"
+########### should set up remap values here instead of inside of the function - i was lazy 
+#remap 1 =
+# remap 2 = 
+## Region Group
+neighbor="EIGHT"
+grouping = "within"
+link = "ADD_LINK"
 ## MW
-mw_type = "area"  # "edge", "area", or "patchnum"
+mw_type = "pn"  # "edge", "area", or "patchnum"
 mw_radius = 500
-stat = "SUM"  # variety
+stat = "VARIETY"  # variety
+
+#########################################    
 
 def get_year(filename):
     # Extract 4-digit year from filename using regex
@@ -163,6 +178,28 @@ def rc_rasters(input_raster = rc_in, rc_type = rc_type):
         print(f"Reclassify error: {str(e)}")
         return None
     
+def region_group(input_raster = area_rc_out, output_dir = rg_out, number_neighbors = neighbor, zone_connectivity = grouping, add_link = link, excluded_value = 0):
+    try:
+        basename = os.path.basename(input_raster)
+        year = get_year(basename)
+        output_path = os.path.join(output_dir, f"{year}_area_rg.tif")
+
+        # region group
+        if not arcpy.Exists(output_path):
+            rg = arcpy.sa.RegionGroup(
+                input_raster,
+                number_neighbors,
+                zone_connectivity,
+                add_link,
+                excluded_value
+            )
+            rg.save(output_path)
+            print(f"RegionGroup successful: {output_path}")
+        return output_path
+    except Exception as e:
+        print(f"Clip error: {str(e)}")
+        return None
+
 def moving_window(input_raster = None, output_dir = mw_out, type = mw_type, radius = mw_radius, stat = stat):
     try:
         basename = os.path.basename(input_raster)
@@ -181,8 +218,6 @@ def moving_window(input_raster = None, output_dir = mw_out, type = mw_type, radi
         print(f"Moving Window error: {str(e)}")
         return None 
     
-
-
 
 # ==========
 if __name__ == "__main__":
@@ -211,19 +246,35 @@ if __name__ == "__main__":
     # rc_duration = time.time() - rc_start
     # print(f"Reclassification completed in {rc_duration:.2f} seconds")
     
-    ## Run moving window stage
-    print("Starting Moving Window")
-    mw_start = time.time()
-    mw_results = process_rasters(
-        moving_window, 
-        area_mw_in,         # change this as needed
-        output_dir = mw_out, 
-        type = mw_type, 
-        radius = mw_radius, 
-        stat = stat
+    ## Region Group - for patchnumber only 
+    print("Starting RegionGroup")
+    rg_start = time.time()
+    rg_results = process_rasters(
+        region_group,
+        area_rc_out,
+        output_dir = rg_out,
+        number_neighbors = neighbor,
+        zone_connectivity = grouping,
+        add_link = link,
+        excluded_value = 0
+
     )
-    mw_duration = time.time() - mw_start
-    print(f"Moving window completed in {mw_duration:.2f} seconds")
+    rg_duration = time.time() - rg_start
+    print(f"RegionGroup completed in {rg_duration:.2f} seconds")
+
+    ## Run moving window stage
+    # print("Starting Moving Window")
+    # mw_start = time.time()
+    # mw_results = process_rasters(
+    #     moving_window, 
+    #     area_mw_in,         # change this as needed
+    #     output_dir = mw_out, 
+    #     type = mw_type, 
+    #     radius = mw_radius, 
+    #     stat = stat
+    # )
+    # mw_duration = time.time() - mw_start
+    # print(f"Moving window completed in {mw_duration:.2f} seconds")
 
     # ## Total processing time
     # total_time = time.time() - clip_start

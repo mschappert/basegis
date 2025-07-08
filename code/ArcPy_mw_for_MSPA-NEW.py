@@ -33,7 +33,7 @@ from functools import partial
 arcpy.env.overwriteOutput = True
 arcpy.env.parallelProcessingFactor = "100%"  # Use percentage format for built-in parallel processing
 arcpy.CheckOutExtension("Spatial")
-cores = multiprocessing.cpu_count()  # Use all cores
+cores = multiprocessing.cpu_count() - 8 # Use all cores
 
 # ArcPy Environments
 # arcpy.env.snapRaster = "path/to/reference_raster.tif"
@@ -51,16 +51,16 @@ clip_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
 clip_mask = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
 clip_out = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
 # Reclassification
-rc_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
-edge_rc_out = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
-area_rc_out = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
+rc_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_c\MSPA_c" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
+edge_rc_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
+area_rc_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
 # RegionGroup
-rg_out = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
+rg_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\rg" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
 # Moving window
 edge_mw_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
-area_mw_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
-pn_mw_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
-mw_out = r"D:\Mikayla_RA\RA_S25\Time_Series\mw"
+area_mw_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
+pn_mw_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rg_patchnum_1" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
+mw_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\mw_results" #r"M:\MW_RESULTS" #r"D:\Mikayla_RA\RA_S25\Time_Series\mw"
 
 # Parameters that change
 ## RC
@@ -74,9 +74,9 @@ neighbor="EIGHT"
 grouping = "within"
 link = "ADD_LINK"
 ## MW
-mw_type = "area"  # "edge", "area", or "patchnum"
+mw_type = "pn"  # "edge", "area", or "pn"
 mw_radius = 1000
-stat = "SUM"  # VARIETY # SUM
+stat = "VARIETY"  # VARIETY # SUM
 
 #########################################    
 
@@ -222,11 +222,11 @@ def moving_window(input_raster, output_dir=mw_out, type=mw_type, radius=mw_radiu
 
         # mw
         if not arcpy.Exists(output_path):
-            print(f"Processing {basename} - PID: {os.getpid()}")
+            print(f"Processing {basename}")
             neighborhood = arcpy.sa.NbrCircle(radius, "MAP")
             focal = arcpy.sa.FocalStatistics(input_raster, neighborhood, stat)
             focal.save(output_path)
-            print(f"Moving window successful: {output_path} - PID: {os.getpid()}")
+            print(f"Moving window successful: {output_path}")
         return output_path
         
     except Exception as e:
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     # rc_results = process_rasters(
     #     rc_rasters, 
     #     rc_in,
-    #     use_multiprocessing=False,  # Set to True for multiprocessing.Pool
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
     #     rc_type=rc_type
     # )
     # rc_duration = time.time() - rc_start
@@ -269,7 +269,7 @@ if __name__ == "__main__":
     # rg_results = process_rasters(
     #     region_group,
     #     area_rc_out,
-    #     use_multiprocessing=False,  # Set to True for multiprocessing.Pool
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
     #     output_dir=rg_out,
     #     number_neighbors=neighbor,
     #     zone_connectivity=grouping,
@@ -284,7 +284,7 @@ if __name__ == "__main__":
     mw_start = time.time()
     mw_results = process_rasters(
         moving_window, 
-        area_mw_in,
+        pn_mw_in,
         use_multiprocessing=True,  # Set to True for multiprocessing.Pool
         output_dir=mw_out, 
         type=mw_type, 

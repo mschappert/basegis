@@ -31,9 +31,9 @@ from functools import partial
 ##########
 # ArcPy Configurations
 arcpy.env.overwriteOutput = True
-arcpy.env.parallelProcessingFactor = "200" #"0" # "200%"- use 0 if using processing pool
+arcpy.env.parallelProcessingFactor = "100%"  # Use percentage format for built-in parallel processing
 arcpy.CheckOutExtension("Spatial")
-cores = multiprocessing.cpu_count() - 1  # Leave 1 core free
+cores = multiprocessing.cpu_count()  # Use all cores
 
 # ArcPy Environments
 # arcpy.env.snapRaster = "path/to/reference_raster.tif"
@@ -80,53 +80,65 @@ stat = "SUM"  # VARIETY # SUM
 
 #########################################    
 
+def init_worker():
+    """Initialize ArcPy environment for multiprocessing workers"""
+    import arcpy
+    arcpy.env.overwriteOutput = True
+    arcpy.env.parallelProcessingFactor = "0"  # Disable parallel processing in workers
+    arcpy.CheckOutExtension("Spatial")
+    arcpy.env.pyramid = "NONE"
+    arcpy.env.rasterStatistics = "NONE"
+
 def get_year(filename):
     # Extract 4-digit year from filename using regex
     match = re.search(r"(\d{4})", filename)
     return match.group(1) if match else ""
 
-def process_rasters(process_func, input_dir, **kwargs):
+def process_rasters(process_func, input_dir, use_multiprocessing=False, **kwargs):
     """
     Process rasters in batch mode using parallel processing
     - process_func: Function to apply (clip_rasters, rc_rasters, or moving_window)
     - input_dir: Directory containing input rasters
+    - use_multiprocessing: 
+        * True = Batch parallelism (multiple files at once) - for tools WITHOUT native parallel support
+        * False = Tool parallelism (ArcPy handles it) - for tools WITH native parallel support
     - kwargs: Function-specific parameters
     """
     arcpy.env.workspace = input_dir
     rasters = arcpy.ListRasters()
-    print(f"Processing {len(rasters)}...")
-
-    # original
-    # with multiprocessing.Pool(processes=cores) as pool:
-    #     results = []
-    # for raster in rasters:
-    #     input_path = os.path.join(input_dir, raster)
-    #     # Pass arguments as keyword arguments
-    #     results.append(pool.apply_async(process_func, (input_path,), kwargs))
-    #     outputs = [r.get() for r in results]
+    print(f"Processing {len(rasters)} rasters...")
     
-    ## for using built in parallel processing
-    outputs = []
-    for raster in rasters:
-        input_path = os.path.join(input_dir, raster)
-        result = process_func(input_path, **kwargs)
-        outputs.append(result)
+    if not rasters:
+        print("No rasters found in directory")
+        return []
+
+    if use_multiprocessing:
+        # BATCH PARALLELISM: Process multiple files simultaneously
+        # Use when ArcPy tool doesn't have native parallel processing
+        arcpy.env.parallelProcessingFactor = "0"  # Disable tool-level parallelism
+        input_paths = [os.path.join(input_dir, r) for r in rasters]
+        func = partial(process_func, **kwargs)
+        
+        print(f"Using {cores} processes for multiprocessing")
+        with multiprocessing.Pool(processes=cores, initializer=init_worker) as pool:
+            outputs = pool.map(func, input_paths)
+    else:
+        # TOOL PARALLELISM: Let ArcPy tool handle parallelism internally
+        # Use when ArcPy tool has native parallel processing support
+        arcpy.env.parallelProcessingFactor = "100%"  # Enable tool-level parallelism
+        outputs = []
+        for raster in rasters:
+            input_path = os.path.join(input_dir, raster)
+            result = process_func(input_path, **kwargs)
+            outputs.append(result)
+    
     success_count = sum(1 for p in outputs if p)
-
-    # for using processing pool instead of built in parallel processing
-    # input_paths = [os.path.join(input_dir, r) for r in rasters]
-    # # Use partial to fix constant kwargs for process_func
-    # func = partial(process_func, **kwargs)
-    # with multiprocessing.Pool(processes=cores) as pool:
-    #     outputs = pool.map(func, input_paths)
-    # success_count = sum(1 for p in outputs if p)
-
     print(f"Process complete: {success_count}/{len(rasters)} succeeded")
     return outputs
     
 #########################################    
 
-def clip_rasters (input_raster = clip_in, output_dir = clip_out, clip_mask = clip_mask):
+def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
     try:
         basename = os.path.basename(input_raster)
         year = get_year(basename)
@@ -142,7 +154,7 @@ def clip_rasters (input_raster = clip_in, output_dir = clip_out, clip_mask = cli
         print(f"Clip error: {str(e)}")
         return None
    
-def rc_rasters(input_raster = rc_in, rc_type = rc_type):
+def rc_rasters(input_raster, rc_type=rc_type):
     try:
         basename = os.path.basename(input_raster)
         year = get_year(basename)
@@ -166,6 +178,7 @@ def rc_rasters(input_raster = rc_in, rc_type = rc_type):
                 (arcpy.sa.Raster(input_raster) == 117), 1, 0)
         else:
             print(f"Error: Undefined rc_type. Must be 'edge' or 'area'.")
+            return None
             ################ if it doesn't fit in the if/else - set it to stop/ print: RC type not defined, skipping files        
         # reclassify
         if not arcpy.Exists(output_path):
@@ -179,7 +192,7 @@ def rc_rasters(input_raster = rc_in, rc_type = rc_type):
         print(f"Reclassify error: {str(e)}")
         return None
     
-def region_group(input_raster = area_rc_out, output_dir = rg_out, number_neighbors = neighbor, zone_connectivity = grouping, add_link = link, excluded_value = 0):
+def region_group(input_raster, output_dir=rg_out, number_neighbors=neighbor, zone_connectivity=grouping, add_link=link, excluded_value=0):
     try:
         basename = os.path.basename(input_raster)
         year = get_year(basename)
@@ -201,7 +214,7 @@ def region_group(input_raster = area_rc_out, output_dir = rg_out, number_neighbo
         print(f"Clip error: {str(e)}")
         return None
 
-def moving_window(input_raster = None, output_dir = mw_out, type = mw_type, radius = mw_radius, stat = stat):
+def moving_window(input_raster, output_dir=mw_out, type=mw_type, radius=mw_radius, stat=stat):
     try:
         basename = os.path.basename(input_raster)
         year = get_year(basename)
@@ -209,10 +222,11 @@ def moving_window(input_raster = None, output_dir = mw_out, type = mw_type, radi
 
         # mw
         if not arcpy.Exists(output_path):
+            print(f"Processing {basename} - PID: {os.getpid()}")
             neighborhood = arcpy.sa.NbrCircle(radius, "MAP")
             focal = arcpy.sa.FocalStatistics(input_raster, neighborhood, stat)
             focal.save(output_path)
-            print(f"Moving window successful: {output_path}")
+            print(f"Moving window successful: {output_path} - PID: {os.getpid()}")
         return output_path
         
     except Exception as e:
@@ -229,50 +243,53 @@ if __name__ == "__main__":
     # clip_start = time.time()
     # clip_results = process_rasters(
     #     clip_rasters, 
-    #     clip_in, 
-    #     output_dir = clip_out, 
+    #     clip_in,
+    #     use_multiprocessing=False,  # Set to True for multiprocessing.Pool
+    #     output_dir=clip_out, 
     #     clip_mask=clip_mask
     # )
     # clip_duration = time.time() - clip_start
     # print(f"Clip completed in {clip_duration:.2f} seconds")
     
     # ## Run reclassification stage
-    # print("Staring Reclassification")
+    # print("Starting Reclassification")
     # rc_start = time.time()
     # rc_results = process_rasters(
     #     rc_rasters, 
-    #     rc_in, 
-    #     rc_type = rc_type
+    #     rc_in,
+    #     use_multiprocessing=False,  # Set to True for multiprocessing.Pool
+    #     rc_type=rc_type
     # )
     # rc_duration = time.time() - rc_start
     # print(f"Reclassification completed in {rc_duration:.2f} seconds")
     
-    ## Region Group - for patchnumber only 
+    # ## Region Group - for patchnumber only 
     # print("Starting RegionGroup")
     # rg_start = time.time()
     # rg_results = process_rasters(
     #     region_group,
     #     area_rc_out,
-    #     output_dir = rg_out,
-    #     number_neighbors = neighbor,
-    #     zone_connectivity = grouping,
-    #     add_link = link,
-    #     excluded_value = 0
-
+    #     use_multiprocessing=False,  # Set to True for multiprocessing.Pool
+    #     output_dir=rg_out,
+    #     number_neighbors=neighbor,
+    #     zone_connectivity=grouping,
+    #     add_link=link,
+    #     excluded_value=0
     # )
     # rg_duration = time.time() - rg_start
     # print(f"RegionGroup completed in {rg_duration:.2f} seconds")
 
-    # ## Run moving window stage
+    ## Run moving window stage
     print("Starting Moving Window")
     mw_start = time.time()
     mw_results = process_rasters(
         moving_window, 
-        area_mw_in,                 # change this as needed
-        output_dir = mw_out, 
-        type = mw_type, 
-        radius = mw_radius, 
-        stat = stat
+        area_mw_in,
+        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+        output_dir=mw_out, 
+        type=mw_type, 
+        radius=mw_radius, 
+        stat=stat
     )
     mw_duration = time.time() - mw_start
     print(f"Moving window completed in {mw_duration:.2f} seconds")
@@ -280,3 +297,5 @@ if __name__ == "__main__":
     # ## Total processing time
     # total_time = time.time() - clip_start
     # print(f"\nTotal processing time: {total_time:.2f} seconds")
+    
+    print("Processing complete!")

@@ -60,7 +60,7 @@ def remap_raster(input_raster, output_dir, stage = metric_type):
         year = get_year(basename)
         
         # Define remap rules based on the stage
-        if stage == "patch":
+        if stage == "pn":
             output_path = os.path.join(output_dir, f"{year}_pn_rmp.tif")
             remap_rules = [
                 (-70, -1.01, 100),

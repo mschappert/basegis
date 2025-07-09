@@ -33,7 +33,7 @@ from functools import partial
 arcpy.env.overwriteOutput = True
 arcpy.env.parallelProcessingFactor = "100%"  # Use percentage format for built-in parallel processing
 arcpy.CheckOutExtension("Spatial")
-cores = multiprocessing.cpu_count() - 8 # Use all cores
+cores = multiprocessing.cpu_count() # Use all cores #- 8 can adjust how many cores are left out
 
 # ArcPy Environments
 # arcpy.env.snapRaster = "path/to/reference_raster.tif"

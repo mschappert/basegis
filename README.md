@@ -60,6 +60,7 @@ dependencies:
   - bottleneck
   - stackstac=0.5.0
   - rasterio
+  - gdal
 ```
 ## 2. Create vim dockerfile
 * VS Code > R-click > new file > `Dockerfile`

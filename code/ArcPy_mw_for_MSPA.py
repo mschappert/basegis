@@ -46,37 +46,48 @@ arcpy.env.rasterStatistics = "NONE"
 
 ##########
 # Folder Directories
+
 # Clip
 clip_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
 clip_mask = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
 clip_out = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
+
 # Reclassification
 rc_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_c\MSPA_c" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
 edge_rc_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
 area_rc_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
+rc_type = "area"  # "edge" or "area"sent
+########### should set up remap values here instead of inside of the function - i was lazy 
+#remap 1 =
+# remap 2 = 
+
 # RegionGroup
 rg_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\rg" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
+neighbor="EIGHT"
+grouping = "within"
+link = "ADD_LINK"
+
 # Moving window
 edge_mw_in = r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
 area_mw_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
 pn_mw_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rg_patchnum_1" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
 mw_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\mw_results" #r"M:\MW_RESULTS" #r"D:\Mikayla_RA\RA_S25\Time_Series\mw"
-
-# Parameters that change
-## RC
-rc_type = "area"  # "edge" or "area"sent
-
-########### should set up remap values here instead of inside of the function - i was lazy 
-#remap 1 =
-# remap 2 = 
-## Region Group
-neighbor="EIGHT"
-grouping = "within"
-link = "ADD_LINK"
-## MW
 mw_type = "pn"  # "edge", "area", or "pn"
 mw_radius = 1000
 stat = "VARIETY"  # VARIETY # SUM
+
+# Reproject raster
+rpj_in = r"B:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area"
+rpj_out = r"B:\Mikayla\DATA\Projects\AF\Time_Series\area_p"
+rpj_resampling = "BILINEAR" # Resampling type: "NEAREST", "BILINEAR", "CUBIC"
+# environment variables for reprojection
+snap_raster= r"B:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area\1990_area_1km.tif"  # Snap raster for reprojection, set to None by default
+cell_size=None
+# CRS
+rpj_ref = r"B:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area\1990_area_1km.tif"  # Reference raster for reprojection, set to None by default
+target_crs=None
+
+
 
 #########################################    
 
@@ -233,6 +244,42 @@ def moving_window(input_raster, output_dir=mw_out, type=mw_type, radius=mw_radiu
         print(f"Moving Window error: {str(e)}")
         return None 
     
+def reproject_raster(input_raster, output_dir, reference_raster=rpj_ref, target_crs=target_crs, 
+                    cell_size=cell_size, snap_raster=snap_raster, resampling=rpj_resampling):
+    try:
+        basename = os.path.basename(input_raster)
+        output_path = os.path.join(output_dir, f"{os.path.splitext(basename)[0]}_P.tif")
+        
+        if not arcpy.Exists(output_path):
+            print(f"Reprojecting {basename}")
+            
+            # Set environment variables if provided
+            if snap_raster:
+                arcpy.env.snapRaster = snap_raster
+            if cell_size:
+                arcpy.env.cellSize = cell_size
+            
+            # Determine coordinate system
+            if reference_raster:
+                coord_system = reference_raster
+            elif target_crs:
+                coord_system = target_crs
+            else:
+                raise ValueError("Must provide either reference_raster or target_crs")
+            
+            arcpy.management.ProjectRaster(
+                input_raster,
+                output_path,
+                coord_system,
+                resampling_type=resampling
+            )
+            print(f"Reproject successful: {output_path}")
+        return output_path
+        
+    except Exception as e:
+        print(f"Reproject error: {str(e)}")
+        return None
+    
 
 # ==========
 if __name__ == "__main__":
@@ -280,19 +327,36 @@ if __name__ == "__main__":
     # print(f"RegionGroup completed in {rg_duration:.2f} seconds")
 
     ## Run moving window stage
-    print("Starting Moving Window")
-    mw_start = time.time()
-    mw_results = process_rasters(
-        moving_window, 
-        pn_mw_in,
+    # print("Starting Moving Window")
+    # mw_start = time.time()
+    # mw_results = process_rasters(
+    #     moving_window, 
+    #     pn_mw_in,
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+    #     output_dir=mw_out, 
+    #     type=mw_type, 
+    #     radius=mw_radius, 
+    #     stat=stat
+    # )
+    # mw_duration = time.time() - mw_start
+    # print(f"Moving window completed in {mw_duration:.2f} seconds")
+    
+    ## Reproject raster stage
+    print("Starting Reprojection")
+    rpj_start = time.time()
+    rpj_results = process_rasters(
+        reproject_raster,
+        rpj_in,
         use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-        output_dir=mw_out, 
-        type=mw_type, 
-        radius=mw_radius, 
-        stat=stat
+        output_dir=rpj_out,
+        reference_raster=rpj_ref,  # Set to None if not using a reference raster
+        target_crs=target_crs,  # Set to None if not using a target CRS
+        cell_size=cell_size,  # Set to None if not using a specific cell size
+        snap_raster=snap_raster,  # Set to None if not using
+        resampling=rpj_resampling  # Resampling type: "NEAREST", "BILINEAR", "CUBIC"
     )
-    mw_duration = time.time() - mw_start
-    print(f"Moving window completed in {mw_duration:.2f} seconds")
+    rpj_duration = time.time() - rpj_start
+    print(f"Reprojection completed in {rpj_duration:.2f} seconds")
 
     # ## Total processing time
     # total_time = time.time() - clip_start

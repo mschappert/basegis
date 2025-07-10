@@ -48,23 +48,21 @@ arcpy.env.rasterStatistics = "NONE"
 # Folder Directories
 
 # Clip
-clip_in = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\MSPA_results_P"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
-clip_mask = r"D:\Mikayla_RA\RA_S25\tiff_Albers\1990_P.tif"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
-clip_out = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\MSPA_c"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
+clip_in = r"D:\NEW_WORKING\MSPA_results_P"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
+clip_mask = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers\1990_P.tif"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
+clip_out = r"D:\NEW_WORKING\MSPA_c"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
 
 # Reclassification
-rc_in = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\MSPA_c"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_c\MSPA_c" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
-edge_rc_out = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\MSPA_rc_edge" 
-# r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
-area_rc_out = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\MSPA_rc_area"
-#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
+rc_in = r"D:\NEW_WORKING\MSPA_c"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_c\MSPA_c" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
+edge_rc_out = r"D:\NEW_WORKING\MSPA_rc_edge" # r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
+area_rc_out = r"D:\NEW_WORKING\MSPA_rc_area" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
 rc_type = "area"  # "edge" or "area"sent
 ########### should set up remap values here instead of inside of the function - i was lazy 
 #remap 1 =
 # remap 2 = 
 
 # RegionGroup
-rg_out = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\rg"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\rg" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
+rg_out = r"D:\NEW_WORKING\rg"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\rg" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
 neighbor="EIGHT"
 grouping = "within"
 link = "ADD_LINK"
@@ -74,17 +72,17 @@ rc_rg_in = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\rg"#r"S:\Mikayla\DATA\Projects\AF\
 rc_rg_out = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\rg_rc" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_out"
 
 # Moving window
-edge_mw_in = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
-area_mw_in = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\MSPA_rc_area"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
-pn_mw_in = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\rg_rc"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rg_patchnum_1" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
-mw_out = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\mw_results"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\mw_results" #r"M:\MW_RESULTS" #r"D:\Mikayla_RA\RA_S25\Time_Series\mw"
+edge_mw_in = r"D:\NEW_WORKING\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
+area_mw_in = r"D:\NEW_WORKING\MSPA_rc_area"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
+pn_mw_in = r"D:\NEW_WORKING\rg_rc"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rg_patchnum_1" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
+mw_out = r"D:\NEW_WORKING\mw_results"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\mw_results" #r"M:\MW_RESULTS" #r"D:\Mikayla_RA\RA_S25\Time_Series\mw"
 mw_type = "area"  # "edge", "area", or "pn"
 mw_radius = 1000
-stat = "VARIETY"  # VARIETY # SUM
+stat = "SUM"  # VARIETY # SUM
 
 # Reclass Region Group
-# rc_rg_in = #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_in"  # Input directory for reclass region group
-# rc_rg_out = #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_out2"  # Output directory for reclass region group
+rc_rg_in = #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_in"  # Input directory for reclass region group
+rc_rg_out = #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_out2"  # Output directory for reclass region group
 
 # Reproject raster
 # rpj_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_pn\rc"#r"B:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area"
@@ -168,6 +166,7 @@ def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
 
         # clip
         if not arcpy.Exists(output_path):
+            arcpy.env.snapRaster = clip_mask
             clipped = arcpy.sa.ExtractByMask(input_raster, clip_mask)
             clipped.save(output_path)
             print(f"Clip successful: {output_path}")
@@ -306,29 +305,29 @@ if __name__ == "__main__":
     print("Starting Processing")
 
     # ## Run clip stage
-    print("Starting Clip")
-    clip_start = time.time()
-    clip_results = process_rasters(
-        clip_rasters, 
-        clip_in,
-        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-        output_dir=clip_out, 
-        clip_mask=clip_mask
-    )
-    clip_duration = time.time() - clip_start
-    print(f"Clip completed in {clip_duration:.2f} seconds")
+    # print("Starting Clip")
+    # clip_start = time.time()
+    # clip_results = process_rasters(
+    #     clip_rasters, 
+    #     clip_in,
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+    #     output_dir=clip_out, 
+    #     clip_mask=clip_mask
+    # )
+    # clip_duration = time.time() - clip_start
+    # print(f"Clip completed in {clip_duration:.2f} seconds")
     
     # ## Run reclassification stage
-    print("Starting Reclassification")
-    rc_start = time.time()
-    rc_results = process_rasters(
-        rc_rasters, 
-        rc_in,
-        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-        rc_type=rc_type
-    )
-    rc_duration = time.time() - rc_start
-    print(f"Reclassification completed in {rc_duration:.2f} seconds")
+    # print("Starting Reclassification")
+    # rc_start = time.time()
+    # rc_results = process_rasters(
+    #     rc_rasters, 
+    #     rc_in,
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+    #     rc_type=rc_type
+    # )
+    # rc_duration = time.time() - rc_start
+    # print(f"Reclassification completed in {rc_duration:.2f} seconds")
     
     # ## Region Group - for patchnumber only 
     # print("Starting RegionGroup")
@@ -347,19 +346,19 @@ if __name__ == "__main__":
     # print(f"RegionGroup completed in {rg_duration:.2f} seconds")
 
     ## Run moving window stage
-    print("Starting Moving Window")
-    mw_start = time.time()
-    mw_results = process_rasters(
-        moving_window, 
-        area_mw_in,
-        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-        output_dir=mw_out, 
-        type=mw_type, 
-        radius=mw_radius, 
-        stat=stat
-    )
-    mw_duration = time.time() - mw_start
-    print(f"Moving window completed in {mw_duration:.2f} seconds")
+    # print("Starting Moving Window")
+    # mw_start = time.time()
+    # mw_results = process_rasters(
+    #     moving_window, 
+    #     area_mw_in, # change with mw type 
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+    #     output_dir=mw_out, 
+    #     type=mw_type, 
+    #     radius=mw_radius, 
+    #     stat=stat
+    # )
+    # mw_duration = time.time() - mw_start
+    # print(f"Moving window completed in {mw_duration:.2f} seconds")
     
     ## Reclass region group raster to fix background values
     # print("Starting Reclass Region Group")

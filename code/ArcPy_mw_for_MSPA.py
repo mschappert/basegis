@@ -81,8 +81,8 @@ mw_radius = 1000
 stat = "SUM"  # VARIETY # SUM
 
 # Reclass Region Group
-rc_rg_in = #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_in"  # Input directory for reclass region group
-rc_rg_out = #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_out2"  # Output directory for reclass region group
+#rc_rg_in = #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_in"  # Input directory for reclass region group
+#rc_rg_out = #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_out2"  # Output directory for reclass region group
 
 # Reproject raster
 # rpj_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_pn\rc"#r"B:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area"
@@ -166,9 +166,10 @@ def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
 
         # clip
         if not arcpy.Exists(output_path):
-            arcpy.env.snapRaster = clip_mask
-            clipped = arcpy.sa.ExtractByMask(input_raster, clip_mask)
-            clipped.save(output_path)
+            arcpy.env.snapRaster = clip_mask # environment: snap raster
+            clipped = arcpy.sa.ExtractByMask(input_raster, clip_mask) # clip
+            clipped_int = arcpy.sa.Int(clipped)  # Convert to integer to preserve data type
+            clipped_int.save(output_path) #clipped.save(output_path)
             print(f"Clip successful: {output_path}")
         return output_path
     except Exception as e:
@@ -305,17 +306,17 @@ if __name__ == "__main__":
     print("Starting Processing")
 
     # ## Run clip stage
-    # print("Starting Clip")
-    # clip_start = time.time()
-    # clip_results = process_rasters(
-    #     clip_rasters, 
-    #     clip_in,
-    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-    #     output_dir=clip_out, 
-    #     clip_mask=clip_mask
-    # )
-    # clip_duration = time.time() - clip_start
-    # print(f"Clip completed in {clip_duration:.2f} seconds")
+    print("Starting Clip")
+    clip_start = time.time()
+    clip_results = process_rasters(
+        clip_rasters, 
+        clip_in,
+        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+        output_dir=clip_out, 
+        clip_mask=clip_mask
+    )
+    clip_duration = time.time() - clip_start
+    print(f"Clip completed in {clip_duration:.2f} seconds")
     
     # ## Run reclassification stage
     # print("Starting Reclassification")

@@ -53,7 +53,7 @@ clip_mask = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers\1990_P.tif"#r"D:\M
 clip_out = r"D:\NEW_WORKING\MSPA_c"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
 
 # Reclassification
-rc_in = r"D:\NEW_WORKING\MSPA_c"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_c\MSPA_c" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
+rc_in = r"D:\NEW_WORKING\MSPA_results_P"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_c\MSPA_c" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
 edge_rc_out = r"D:\NEW_WORKING\MSPA_rc_edge" # r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
 area_rc_out = r"D:\NEW_WORKING\MSPA_rc_area" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
 rc_type = "area"  # "edge" or "area"sent
@@ -95,7 +95,18 @@ stat = "SUM"  # VARIETY # SUM
 # target_crs='PROJCS["South_America_Albers_Equal_Area_Conic",GEOGCS["GCS_1990_P_b1",DATUM["D_South_American_1969",SPHEROID["GRS_1967",6378160.0,298.25]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-60.0],PARAMETER["Standard_Parallel_1",-5.0],PARAMETER["Standard_Parallel_2",-42.0],PARAMETER["Latitude_Of_Origin",-32.0],UNIT["Meter",1.0]]'
 # rpj_ref = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area\1990_area_1km.tif"  # Reference raster with target projection
 
+# TEST- TRY THIS OUT ####################################################
+# create mask
+clip_mask = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers\1990_P.tif"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
+mask_out = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers"
 
+# masked rastets
+# input (area mw)
+raster_input = r"D:\NEW_WORKING\MSPA_mw_area" # need to change this for each type!!!!!!!!!!!!
+# mask
+mask_out = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers\binary_mask.tif""
+# output
+mw_masked_out = r"D:\NEW_WORKING\MSPA_mw_masked" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_masked" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_mw_masked"
 
 #########################################    
 
@@ -158,6 +169,7 @@ def process_rasters(process_func, input_dir, use_multiprocessing=False, **kwargs
     
 #########################################    
 
+# orginal clip function
 def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
     try:
         basename = os.path.basename(input_raster)
@@ -168,13 +180,89 @@ def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
         if not arcpy.Exists(output_path):
             arcpy.env.snapRaster = clip_mask # environment: snap raster
             clipped = arcpy.sa.ExtractByMask(input_raster, clip_mask) # clip
-            clipped_int = arcpy.sa.Int(clipped)  # Convert to integer to preserve data type
-            clipped_int.save(output_path) #clipped.save(output_path)
+            clipped.save(output_path)
             print(f"Clip successful: {output_path}")
         return output_path
     except Exception as e:
         print(f"Clip error: {str(e)}")
         return None
+
+# fixes discrepancies between 5 yr intervals and rest of years
+# 5 yr - has classes for only values occuring 0-220
+# rest of the years - has all vlaues from 0-220    
+# def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
+#     try:
+#         basename = os.path.basename(input_raster)
+#         year = get_year(basename)
+#         output_path = os.path.join(output_dir, f"{year}_c.tif")
+
+#         if not arcpy.Exists(output_path):
+#             arcpy.env.snapRaster = clip_mask
+#             clipped = arcpy.sa.ExtractByMask(input_raster, clip_mask)
+            
+#             # Define valid MSPA values
+#             valid_values = [0, 1, 3, 9, 17, 33, 35, 65, 67, 100, 101, 103, 105, 109, 117, 133, 135, 137, 165, 167, 169, 220]
+            
+#             # Force raster to only contain valid values
+#             condition = arcpy.sa.InList(clipped, valid_values)
+#             cleaned = arcpy.sa.Con(condition, clipped, 0)
+#             cleaned.save(output_path)
+            
+#             # Rebuild RAT
+#             arcpy.management.BuildRasterAttributeTable(output_path, "Overwrite")
+            
+#             print(f"Clip successful: {output_path}")
+#         return output_path
+#     except Exception as e:
+#         print(f"Clip error: {str(e)}")
+#         return None
+
+
+
+
+
+
+
+
+# create a binary mask to use for clipping the weird values from MSPA outputs on the edges
+def create_mask_raster(clip_mask, output_dir):
+    """Convert clip mask to binary mask (all values = 1)"""
+    try:
+        mask_path = os.path.join(output_dir, "binary_mask.tif")
+        if not arcpy.Exists(mask_path):
+            # Convert all non-zero values to 1
+            binary_mask = arcpy.sa.Con(arcpy.sa.IsNull(clip_mask), 0, 1)
+            binary_mask.save(mask_path)
+            print(f"Binary mask created: {mask_path}")
+        return mask_path
+    except Exception as e:
+        print(f"Mask creation error: {str(e)}")
+        return None
+# clips out the weird values from the MSPA outputs on the edges
+def apply_mask_to_raster(input_raster, mask_raster, output_dir):
+    """Apply binary mask - set values to 0 outside mask"""
+    try:
+        basename = os.path.basename(input_raster)
+        output_path = os.path.join(output_dir, f"{basename}_mask.tif")
+        
+        if not arcpy.Exists(output_path):
+            # Where mask = 1, keep original values; elsewhere set to 0
+            masked = arcpy.sa.Con(mask_raster == 1, input_raster, 0)
+            masked.save(output_path)
+            print(f"Mask applied: {output_path}")
+        return output_path
+    except Exception as e:
+        print(f"Mask application error: {str(e)}")
+        return None
+    
+    
+    
+   
+   
+   
+   
+   
+   
    
 def rc_rasters(input_raster, rc_type=rc_type):
     try:
@@ -306,17 +394,17 @@ if __name__ == "__main__":
     print("Starting Processing")
 
     # ## Run clip stage
-    print("Starting Clip")
-    clip_start = time.time()
-    clip_results = process_rasters(
-        clip_rasters, 
-        clip_in,
-        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-        output_dir=clip_out, 
-        clip_mask=clip_mask
-    )
-    clip_duration = time.time() - clip_start
-    print(f"Clip completed in {clip_duration:.2f} seconds")
+    # print("Starting Clip")
+    # clip_start = time.time()
+    # clip_results = process_rasters(
+    #     clip_rasters, 
+    #     clip_in,
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+    #     output_dir=clip_out, 
+    #     clip_mask=clip_mask
+    # )
+    # clip_duration = time.time() - clip_start
+    # print(f"Clip completed in {clip_duration:.2f} seconds")
     
     # ## Run reclassification stage
     # print("Starting Reclassification")
@@ -389,6 +477,23 @@ if __name__ == "__main__":
     # )
     # rpj_duration = time.time() - rpj_start
     # print(f"Reprojection completed in {rpj_duration:.2f} seconds")
+    
+    ## Create binary mask
+    print("Creating Binary Mask")
+    binary_mask_path = create_mask_raster(clip_mask, mask_out)
+
+    ## Apply mask to rasters
+    print("Applying Mask to Rasters")
+    mask_start = time.time()
+    mask_results = process_rasters(
+        apply_mask_to_raster,
+        raster_input,
+        use_multiprocessing=True,
+        mask_raster=mask_out,
+        output_dir=mw_masked_out
+    )
+    mask_duration = time.time() - mask_start
+    print(f"Masking completed in {mask_duration:.2f} seconds")
 
     # ## Total processing time
     # total_time = time.time() - clip_start

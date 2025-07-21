@@ -59,15 +59,18 @@ arcpy.env.pyramid = "NONE"
 # rpj_ref = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area\1990_area_1km.tif"  # Reference raster with target projection
 
 # Batch Project parameters
-reference_raster = r"B:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_results\1990_.tif"
-rpj_in = r"B:\Mikayla\DATA\Projects\AF\5s_rerun\MSPA_results"  # Input directory with rasters to project
-rpj_out = r"B:\Mikayla\DATA\Projects\AF\5s_rerun\MSPA_results_P"  # Output directory for projected rasters
+reference_raster = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_results\1990_.tif"
+rpj_in = r"S:\Mikayla\DATA\Projects\AF\5s_rerun\MSPA_results"  # Input directory with rasters to project
+rpj_out = r"S:\Mikayla\DATA\Projects\AF\5s_rerun\MSPA_results_P"  # Output directory for projected rasters
 rpj_resampling = "BILINEAR"  # Resampling method: "NEAREST", "BILINEAR", "CUBIC"
 
 # Clip
-clip_in = r"D:\NEW_WORKING\MSPA_results_P"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
-clip_mask = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers\1990_P.tif"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
-clip_out = r"D:\NEW_WORKING\MSPA_c"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
+#clip_in = r"D:\NEW_WORKING\MSPA_results_P"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
+#clip_mask = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers\1990_P.tif"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
+#clip_out = r"D:\NEW_WORKING\MSPA_c"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
+clip_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\clip_in"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
+clip_mask = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask\binary_mask.tif"
+clip_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\clip_out"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"            
 
 # Reclassification
 rc_in = r"D:\NEW_WORKING\MSPA_results_P"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_c\MSPA_c" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
@@ -106,11 +109,11 @@ rc_rg_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_out2"  # Output
 
 # masked rastets
 # input (area mw)
-raster_input = r"B:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_mw_area" #r"D:\NEW_WORKING\MSPA_mw_area" # need to change this for each type!!!!!!!!!!!!
+raster_input = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_mw_area" #r"D:\NEW_WORKING\MSPA_mw_area" # need to change this for each type!!!!!!!!!!!!
 # mask
-mask = r"B:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask\binary_mask.tif"
+mask = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask\binary_mask.tif"
 # output
-mw_masked_out = r"B:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_mw_masked" #r"D:\NEW_WORKING\MSPA_mw_masked" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_masked" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_mw_masked"
+mw_masked_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_mw_masked2" #r"D:\NEW_WORKING\MSPA_mw_masked" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_masked" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_mw_masked"
 
 #########################################    
 
@@ -317,24 +320,34 @@ def moving_window(input_raster, output_dir=mw_out, type=mw_type, radius=mw_radiu
     except Exception as e:
         print(f"Moving Window error: {str(e)}")
         return None 
-    
-# clips out the weird values from the MSPA outputs on the edges
-# turns all outside values to 0 
-# this keeps it clean for terrset (which sometimes likes to add a boarder around the raster)
-def mask_raster(input_raster, output_dir, mask_raster):
-    """Apply binary mask - set values to 0 outside mask"""
+
+
+shrink_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
+shrink_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
+shrink_pixels = 40
+def shrink_raster(input_raster, output_dir=shrink_out, pixels=shrink_pixels):
+    """Shrinks a raster by specified number of pixels"""
     try:
         basename = os.path.basename(input_raster)
-        output_path = os.path.join(output_dir, f"{basename}_mask.tif")
+        output_path = os.path.join(output_dir, f"{os.path.splitext(basename)[0]}_shrink40.tif")
         
         if not arcpy.Exists(output_path):
-            # Where mask = 1, keep original values; elsewhere set to 0
-            masked = arcpy.sa.Con(mask_raster == 1, input_raster, 0)
-            masked.save(output_path)
-            print(f"Mask applied: {output_path}")
+            print(f"Shrinking {basename} by {pixels} pixels")
+            
+            # Use the Shrink tool with all required parameters
+            shrunk = arcpy.sa.Shrink(
+                input_raster,
+                pixels,
+                1  # zone_values parameter - value to shrink (1 for binary masks)
+            )
+            
+            # Save with compression
+            arcpy.env.compression = "LZW"
+            shrunk.save(output_path)
+            print(f"Shrink successful: {output_path}")
         return output_path
     except Exception as e:
-        print(f"Mask application error: {str(e)}")
+        print(f"Shrink error: {str(e)}")
         return None
 
 # ==========
@@ -342,18 +355,18 @@ if __name__ == "__main__":
     print("Starting Processing")
 
     # ## Reproject raster stage
-    print("Starting Reprojection")
-    rpj_start = time.time()
-    rpj_results = process_rasters(
-        reproject_raster,
-        rpj_in,
-        use_multiprocessing=True,
-        output_dir=rpj_out,
-        reference_raster=reference_raster,
-        resampling=rpj_resampling
-    )
-    rpj_duration = time.time() - rpj_start
-    print(f"Reprojection completed in {rpj_duration:.2f} seconds")
+    # print("Starting Reprojection")
+    # rpj_start = time.time()
+    # rpj_results = process_rasters(
+    #     reproject_raster,
+    #     rpj_in,
+    #     use_multiprocessing=True,
+    #     output_dir=rpj_out,
+    #     reference_raster=reference_raster,
+    #     resampling=rpj_resampling
+    # )
+    # rpj_duration = time.time() - rpj_start
+    # print(f"Reprojection completed in {rpj_duration:.2f} seconds")
     
     # ## Run clip stage
     # print("Starting Clip")
@@ -422,21 +435,21 @@ if __name__ == "__main__":
     # )
     # rc_rg_duration = time.time() - rc_rg_start
     # print(f"Reclass Region Group completed in {rc_rg_duration:.2f} seconds")
-
-    ## Apply mask to rasters
-    print("Applying Mask to Rasters")
-    mask_start = time.time()
-    mask_results = process_rasters(
-        mask_raster,
-        raster_input,
-        use_multiprocessing=True,
-        output_dir=mw_masked_out,
-        mask_raster= mask
-        
+  
+  # Run shrink raster stage
+    print("Starting Shrink")
+    shrink_start = time.time()
+    shrink_results = process_rasters(
+        shrink_raster,
+        shrink_in,
+        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+        output_dir=shrink_out,
+        pixels=shrink_pixels
     )
-    mask_duration = time.time() - mask_start
-    print(f"Masking completed in {mask_duration:.2f} seconds")
+    shrink_duration = time.time() - shrink_start
+    print(f"Shrink completed in {shrink_duration:.2f} seconds")
 
+    
     # ## Total processing time
     # total_time = time.time() - clip_start
     # print(f"\nTotal processing time: {total_time:.2f} seconds")

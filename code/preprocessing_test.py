@@ -73,69 +73,137 @@ def process_rasters(process_func, input_dir, use_multiprocessing=False, **kwargs
     return outputs
     
 #########################################   
-rpj_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\preprocess_test"
-rpj_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\preprocess_test\rpj_out" 
-rc_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\preprocess_test\rc_out"
+# rpj_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\preprocess_test"
+# rpj_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\preprocess_test\rpj_out" 
+# rc_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\preprocess_test\rc_out"
 
-def reproject_to_albers(input_raster, output_dir):
-    """
-    Reproject a raster to ESRI WKID 102033 (USA Contiguous Albers Equal Area Conic)
+# def reproject_to_albers(input_raster, output_dir):
+#     """
+#     Reproject a raster to ESRI WKID 102033 (USA Contiguous Albers Equal Area Conic)
     
-    Args:
-        input_raster: Path to input raster
-        output_dir: Directory for output raster (if None, uses same directory as input)
+#     Args:
+#         input_raster: Path to input raster
+#         output_dir: Directory for output raster (if None, uses same directory as input)
         
-    Returns:
-        Path to output raster if successful, None otherwise
-    """
-    try:
-        # Set up output path
-        if output_dir is None:
-            output_dir = os.path.dirname(input_raster)
+#     Returns:
+#         Path to output raster if successful, None otherwise
+#     """
+#     try:
+#         # Set up output path
+#         if output_dir is None:
+#             output_dir = os.path.dirname(input_raster)
         
-        base_name = os.path.basename(input_raster)
-        output_name = f"{os.path.splitext(base_name)[0]}_P.tif"
-        output_raster = os.path.join(output_dir, output_name)
+#         base_name = os.path.basename(input_raster)
+#         output_name = f"{os.path.splitext(base_name)[0]}_P.tif"
+#         output_raster = os.path.join(output_dir, output_name)
         
-        # Define the target projection (USA Contiguous Albers Equal Area Conic)
-        sr = arcpy.SpatialReference(102033)
+#         # Define the target projection (USA Contiguous Albers Equal Area Conic)
+#         sr = arcpy.SpatialReference(102033)
         
-        # Perform reprojection
-        print(f"Reprojecting {base_name} to WKID 102033...")
-        temp_output = os.path.join(output_dir, f"temp_{os.path.splitext(base_name)[0]}.tif")
+#         # Perform reprojection
+#         print(f"Reprojecting {base_name} to WKID 102033...")
+#         temp_output = os.path.join(output_dir, f"temp_{os.path.splitext(base_name)[0]}.tif")
         
-        arcpy.management.ProjectRaster(
-            in_raster=input_raster,
-            out_raster=temp_output,
-            out_coor_system=sr,
-            resampling_type="BILINEAR",
-            cell_size="",
-            geographic_transform="",
-            in_coor_system=""
-        )
+#         arcpy.management.ProjectRaster(
+#             in_raster=input_raster,
+#             out_raster=temp_output,
+#             out_coor_system=sr,
+#             resampling_type="BILINEAR",
+#             cell_size="",
+#             geographic_transform="",
+#             in_coor_system=""
+#         )
         
-        # Ensure output is GeoTIFF format
-        print(f"Converting to GeoTIFF format...")
-        arcpy.management.CopyRaster(
-            in_raster=temp_output,
-            out_rasterdataset=output_raster,
-            format="TIFF"
-        )
+#         # Ensure output is GeoTIFF format
+#         print(f"Converting to GeoTIFF format...")
+#         arcpy.management.CopyRaster(
+#             in_raster=temp_output,
+#             out_rasterdataset=output_raster,
+#             format="TIFF"
+#         )
         
-        # Clean up temporary file
-        if os.path.exists(temp_output):
-            arcpy.management.Delete(temp_output)
+#         # Clean up temporary file
+#         if os.path.exists(temp_output):
+#             arcpy.management.Delete(temp_output)
         
-        print(f"Successfully reprojected: {output_raster}")
-        return output_raster
+#         print(f"Successfully reprojected: {output_raster}")
+#         return output_raster
     
-    except Exception as e:
-        print(f"Error reprojecting {input_raster}: {str(e)}")
-        return None
+#     except Exception as e:
+#         print(f"Error reprojecting {input_raster}: {str(e)}")
+#         return None
 
-def reclassify_binary(input_raster, output_dir=None):
+
+# def reclassify_binary(input_raster, output_dir=None):
+#     """
+#     Reclassify raster values: 0 to 1, 1 to 2, and NoData to 1
+    
+#     Args:
+#         input_raster: Path to input raster
+#         output_dir: Directory for output raster (if None, uses same directory as input)
+        
+#     Returns:
+#         Path to output raster if successful, None otherwise
+#     """
+#     try:
+#         # Set up output path
+#         if output_dir is None:
+#             output_dir = os.path.dirname(input_raster)
+        
+#         base_name = os.path.basename(input_raster)
+#         output_name = f"{os.path.splitext(base_name)[0]}_rc.tif"
+#         output_raster = os.path.join(output_dir, output_name)
+        
+#         # Remove output file if it already exists
+#         if arcpy.Exists(output_raster):
+#             arcpy.management.Delete(output_raster)
+#             print(f"Removed existing file: {output_raster}")
+        
+#         # Create a temporary geodatabase for scratch workspace
+#         temp_gdb = os.path.join(arcpy.env.scratchFolder, "temp.gdb")
+#         if not arcpy.Exists(temp_gdb):
+#             arcpy.management.CreateFileGDB(arcpy.env.scratchFolder, "temp.gdb")
+        
+#         # Use scratch workspace for temporary files
+#         with arcpy.EnvManager(scratchWorkspace=temp_gdb):
+#             # Perform reclassification with specific remap string: 0->1, 1->2, NODATA->1
+#             print(f"Reclassifying {base_name}...")
+#             out_raster = arcpy.sa.Reclassify(
+#                 in_raster=input_raster,
+#                 reclass_field="Value",
+#                 remap="0 1;1 2;NODATA 1",
+#                 missing_values="DATA"
+#             )
+            
+#             # Save as GeoTIFF
+#             print(f"Saving as GeoTIFF: {output_raster}")
+#             out_raster.save(output_raster)
+        
+#         print(f"Successfully reclassified: {output_raster}")
+#         return output_raster
+    
+#     except Exception as e:
+#         print(f"Error reclassifying {input_raster}: {str(e)}")
+#         return None
+
+
+# this works for using GWB for reclassifying the raster
+#orig code from esri
+# with arcpy.EnvManager(outputCoordinateSystem='PROJCS["South_America_Albers_Equal_Area_Conic",GEOGCS["GCS_South_American_1969",DATUM["D_South_American_1969",SPHEROID["GRS_1967_Truncated",6378160.0,298.25]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-60.0],PARAMETER["Standard_Parallel_1",-5.0],PARAMETER["Standard_Parallel_2",-42.0],PARAMETER["Latitude_Of_Origin",-32.0],UNIT["Meter",1.0]]', parallelProcessingFactor="80%", scratchWorkspace=r"Z:\scho\Eddie_Storage\Mikaya\Data\GWB_Preprosseing\Mosaic_p_rc"):
+# out_raster = arcpy.sa.Reclassify(
+# in_raster=r"Z:\scho\Eddie_Storage\Mikaya\Data\GWB_Preprosseing\Mosaic_P\mosaic_1995_P.tif",
+# reclass_field="Value",
+# remap="0 1;1 2;NODATA 1",
+# missing_values="DATA"
+# )
+# out_raster.save(r"Z:\scho\Eddie_Storage\Mikaya\Data\GWB_Preprosseing\Mosaic_p_rc\mosaic_1995_P_rc.tif")
+
+rc_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\"
+rc_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\"
+
+def reclassify_binary2(input_raster, output_dir=None):
     """
-    Reclassify raster values: 0 to 1 and 1 to 2, saving as BYTE GeoTIFF
+    Reclassify raster values with South America Albers projection: 0 to 1, 1 to 2, and NoData to 1
     
     Args:
         input_raster: Path to input raster
@@ -158,21 +226,25 @@ def reclassify_binary(input_raster, output_dir=None):
             arcpy.management.Delete(output_raster)
             print(f"Removed existing file: {output_raster}")
         
-        # Define reclassification mapping: 0 -> 1, 1 -> 2, NoData -> 0
-        remap = arcpy.sa.RemapValue([[0, 1], [1, 2]])
+        # Use South America Albers projection and custom scratch workspace
+        sa_albers = 'PROJCS["South_America_Albers_Equal_Area_Conic",GEOGCS["GCS_South_American_1969",DATUM["D_South_American_1969",SPHEROID["GRS_1967_Truncated",6378160.0,298.25]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-60.0],PARAMETER["Standard_Parallel_1",-5.0],PARAMETER["Standard_Parallel_2",-42.0],PARAMETER["Latitude_Of_Origin",-32.0],UNIT["Meter",1.0]]'
         
-        # Perform reclassification
-        print(f"Reclassifying {base_name}...")
-        reclass = arcpy.sa.Reclassify(input_raster, "Value", remap, "0")
+        print(f"Reclassifying {base_name} with South America Albers projection...")
         
-        # Save directly as BYTE GeoTIFF
-        print(f"Saving as BYTE GeoTIFF: {output_raster}")
-        arcpy.management.CopyRaster(
-            in_raster=reclass,
-            out_rasterdataset=output_raster,
-            pixel_type="8_BIT_UNSIGNED",
-            format="TIFF"
-        )
+        # Use EnvManager with South America Albers projection and parallel processing
+        with arcpy.EnvManager(outputCoordinateSystem=sa_albers, 
+                             parallelProcessingFactor="80%", 
+                             scratchWorkspace=output_dir):
+            
+            out_raster = arcpy.sa.Reclassify(
+                in_raster=input_raster,
+                reclass_field="Value",
+                remap="0 1;1 2;NODATA 1",
+                missing_values="DATA"
+            )
+            
+            # Save directly to output path
+            out_raster.save(output_raster)
         
         print(f"Successfully reclassified: {output_raster}")
         return output_raster
@@ -181,8 +253,6 @@ def reclassify_binary(input_raster, output_dir=None):
         print(f"Error reclassifying {input_raster}: {str(e)}")
         return None
 
-
-    
     
 if __name__ == "__main__":
     start_time = time.time()
@@ -199,8 +269,8 @@ if __name__ == "__main__":
     ## Step 2: Reclassify the reprojected rasters
     print("\n=== STEP 2: RECLASSIFYING RASTERS ===")
     reclassed = process_rasters(
-        reclassify_binary, 
-        rpj_out,
+        reclassify_binary2, 
+        rc_in,  # can be rpj_out 
         use_multiprocessing=True,  # Let ArcPy handle parallelism for reclassification
         output_dir=rc_out
     )

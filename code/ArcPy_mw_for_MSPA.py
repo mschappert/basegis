@@ -69,7 +69,7 @@ rpj_resampling = "BILINEAR"  # Resampling method: "NEAREST", "BILINEAR", "CUBIC"
 #clip_mask = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers\1990_P.tif"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
 #clip_out = r"D:\NEW_WORKING\MSPA_c"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
 clip_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\clip_in"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
-clip_mask = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask\binary_mask.tif"
+clip_mask = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask\binary_mask_shrink40.tif"
 clip_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\clip_out"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"            
 
 # Reclassification
@@ -208,7 +208,7 @@ def reproject_raster(input_raster, output_dir, reference_raster, resampling):
         print(f"Reproject error: {str(e)}")
         return None
 
-# orginal clip function
+# clip function with NoData set to 0
 def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
     try:
         basename = os.path.basename(input_raster)
@@ -218,9 +218,16 @@ def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
         # clip
         if not arcpy.Exists(output_path):
             arcpy.env.snapRaster = clip_mask # environment: snap raster
-            clipped = arcpy.sa.ExtractByMask(input_raster, clip_mask) # clip
-            clipped.save(output_path)
-            print(f"Clip successful: {output_path}")
+            
+            # First extract by mask
+            clipped = arcpy.sa.ExtractByMask(input_raster, clip_mask)
+            
+            # Then convert NoData to 0
+            with arcpy.EnvManager(nodata="NONE"):
+                final_raster = arcpy.sa.Con(arcpy.sa.IsNull(clipped), 0, clipped)
+                final_raster.save(output_path)
+                
+            print(f"Clip successful with NoData set to 0: {output_path}")
         return output_path
     except Exception as e:
         print(f"Clip error: {str(e)}")
@@ -321,34 +328,49 @@ def moving_window(input_raster, output_dir=mw_out, type=mw_type, radius=mw_radiu
         print(f"Moving Window error: {str(e)}")
         return None 
 
-
-shrink_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
-shrink_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
-shrink_pixels = 40
-def shrink_raster(input_raster, output_dir=shrink_out, pixels=shrink_pixels):
-    """Shrinks a raster by specified number of pixels"""
-    try:
-        basename = os.path.basename(input_raster)
-        output_path = os.path.join(output_dir, f"{os.path.splitext(basename)[0]}_shrink40.tif")
+# THIS WORKS - used it to shrink binary mask so it would keep out weird edge issues
+# shrink_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
+# shrink_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
+# shrink_pixels = 40
+# def shrink_raster(input_raster, output_dir=shrink_out, pixels=shrink_pixels):
+#     """Shrinks a raster by specified number of pixels"""
+#     try:
+#         basename = os.path.basename(input_raster)
+#         output_path = os.path.join(output_dir, f"{os.path.splitext(basename)[0]}_shrink40.tif")
         
-        if not arcpy.Exists(output_path):
-            print(f"Shrinking {basename} by {pixels} pixels")
+#         if not arcpy.Exists(output_path):
+#             print(f"Shrinking {basename} by {pixels} pixels")
             
-            # Use the Shrink tool with all required parameters
-            shrunk = arcpy.sa.Shrink(
-                input_raster,
-                pixels,
-                1  # zone_values parameter - value to shrink (1 for binary masks)
-            )
+#             # Use the Shrink tool with all required parameters
+#             shrunk = arcpy.sa.Shrink(
+#                 input_raster,
+#                 pixels,
+#                 1  # zone_values parameter - value to shrink (1 for binary masks)
+#             )
             
-            # Save with compression
-            arcpy.env.compression = "LZW"
-            shrunk.save(output_path)
-            print(f"Shrink successful: {output_path}")
-        return output_path
-    except Exception as e:
-        print(f"Shrink error: {str(e)}")
-        return None
+#             # Save with compression
+#             arcpy.env.compression = "LZW"
+#             shrunk.save(output_path)
+#             print(f"Shrink successful: {output_path}")
+#         return output_path
+#     except Exception as e:
+#         print(f"Shrink error: {str(e)}")
+#         return None
+
+# if __name__ == "__main__":
+#     print("Starting Processing")
+#       # Run shrink raster stage
+#     print("Starting Shrink")
+#     shrink_start = time.time()
+#     shrink_results = process_rasters(
+#         shrink_raster,
+#         shrink_in,
+#         use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+#         output_dir=shrink_out,
+#         pixels=shrink_pixels
+#     )
+#     shrink_duration = time.time() - shrink_start
+#     print(f"Shrink completed in {shrink_duration:.2f} seconds")
 
 # ==========
 if __name__ == "__main__":
@@ -369,17 +391,17 @@ if __name__ == "__main__":
     # print(f"Reprojection completed in {rpj_duration:.2f} seconds")
     
     # ## Run clip stage
-    # print("Starting Clip")
-    # clip_start = time.time()
-    # clip_results = process_rasters(
-    #     clip_rasters, 
-    #     clip_in,
-    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-    #     output_dir=clip_out, 
-    #     clip_mask=clip_mask
-    # )
-    # clip_duration = time.time() - clip_start
-    # print(f"Clip completed in {clip_duration:.2f} seconds")
+    print("Starting Clip")
+    clip_start = time.time()
+    clip_results = process_rasters(
+        clip_rasters, 
+        clip_in,
+        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+        output_dir=clip_out, 
+        clip_mask=clip_mask
+    )
+    clip_duration = time.time() - clip_start
+    print(f"Clip completed in {clip_duration:.2f} seconds")
     
     # ## Run reclassification stage
     # print("Starting Reclassification")
@@ -435,20 +457,6 @@ if __name__ == "__main__":
     # )
     # rc_rg_duration = time.time() - rc_rg_start
     # print(f"Reclass Region Group completed in {rc_rg_duration:.2f} seconds")
-  
-  # Run shrink raster stage
-    print("Starting Shrink")
-    shrink_start = time.time()
-    shrink_results = process_rasters(
-        shrink_raster,
-        shrink_in,
-        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-        output_dir=shrink_out,
-        pixels=shrink_pixels
-    )
-    shrink_duration = time.time() - shrink_start
-    print(f"Shrink completed in {shrink_duration:.2f} seconds")
-
     
     # ## Total processing time
     # total_time = time.time() - clip_start

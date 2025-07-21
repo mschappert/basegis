@@ -24,20 +24,28 @@
 #     )
 # output_raster.save(r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\masked_test\1991_area_1km_p_con.tif")
 
+
 # BATCH PROCESSING FUNCTIONS BELOW
 import os
 import arcpy
 import multiprocessing
 from functools import partial
 
-# South America Albers projection string
-SA_ALBERS = 'PROJCS["South_America_Albers_Equal_Area_Conic",GEOGCS["GCS_South_American_1969",DATUM["D_South_American_1969",SPHEROID["GRS_1967_Truncated",6378160.0,298.25]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-60.0],PARAMETER["Standard_Parallel_1",-5.0],PARAMETER["Standard_Parallel_2",-42.0],PARAMETER["Latitude_Of_Origin",-32.0],UNIT["Meter",1.0]]'
 
 # ArcPy setup
 arcpy.env.overwriteOutput = True
 arcpy.CheckOutExtension("Spatial")
 
-def reproject_raster(input_raster, output_dir=None, cell_size="31.8869969551851 31.8869969551851", reference_raster=None):
+# Parameters 
+cell_size = "31.8869969551851 31.8869969551851"
+# reference_raster = r""
+
+# South America Albers projection string
+SA_ALBERS = 'PROJCS["South_America_Albers_Equal_Area_Conic",GEOGCS["GCS_South_American_1969",DATUM["D_South_American_1969",SPHEROID["GRS_1967_Truncated",6378160.0,298.25]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-60.0],PARAMETER["Standard_Parallel_1",-5.0],PARAMETER["Standard_Parallel_2",-42.0],PARAMETER["Latitude_Of_Origin",-32.0],UNIT["Meter",1.0]]'
+
+
+
+def reproject_raster(input_raster, output_dir=None, cell_size=None, reference_raster=None):
     """Reproject a raster to South America Albers Equal Area Conic"""
     try:
         # Set up output path

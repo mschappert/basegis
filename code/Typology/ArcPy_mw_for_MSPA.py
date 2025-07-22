@@ -47,73 +47,37 @@ arcpy.env.pyramid = "NONE"
 ##########
 # Parameters
 
-# Reproject raster
-# rpj_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_pn\rc"#r"B:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area"
-# rpj_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_pn\rc_P"#r"B:\Mikayla\DATA\Projects\AF\Time_Series\area_p"
-# rpj_resampling = "BILINEAR" # Resampling type: "NEAREST", "BILINEAR", "CUBIC"
-# # environment variables for reprojection
-# snap_raster= r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area\1990_area_1km.tif"  # Snap raster for reprojection, set to None by default
-# cell_size="31.8869969551851 31.8869969551851"
-# # CRS - South America Albers Equal Area Conic
-# target_crs='PROJCS["South_America_Albers_Equal_Area_Conic",GEOGCS["GCS_1990_P_b1",DATUM["D_South_American_1969",SPHEROID["GRS_1967",6378160.0,298.25]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-60.0],PARAMETER["Standard_Parallel_1",-5.0],PARAMETER["Standard_Parallel_2",-42.0],PARAMETER["Latitude_Of_Origin",-32.0],UNIT["Meter",1.0]]'
-# rpj_ref = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area\1990_area_1km.tif"  # Reference raster with target projection
-
-# Batch Project parameters
-reference_raster = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_results\1990_.tif"
-rpj_in = r"S:\Mikayla\DATA\Projects\AF\5s_rerun\MSPA_results"  # Input directory with rasters to project
-rpj_out = r"S:\Mikayla\DATA\Projects\AF\5s_rerun\MSPA_results_P"  # Output directory for projected rasters
-rpj_resampling = "BILINEAR"  # Resampling method: "NEAREST", "BILINEAR", "CUBIC"
-
-# Clip
-#clip_in = r"D:\NEW_WORKING\MSPA_results_P"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
-#clip_mask = r"D:\NEW_WORKING\clipping_raster_from_tiff_Albers\1990_P.tif"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_tiffs_to_use\1991_P_recoded.tif"
-#clip_out = r"D:\NEW_WORKING\MSPA_c"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
-clip_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\clip_in"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_results"
-clip_mask = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask\binary_mask_shrink40.tif"
-clip_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\clip_out"#r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"            
+# Clip - This step is not necessary - only if needed 
+clip_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\clip_in" # Input directory with rasters to clip
+clip_mask = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask\binary_mask_shrink40.tif" # Mask raster for clipping
+clip_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\clip_out"       
 
 # Reclassification
-rc_in = r"D:\NEW_WORKING\MSPA_results_P"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_c\MSPA_c" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_c"
-edge_rc_out = r"D:\NEW_WORKING\MSPA_rc_edge" # r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
-area_rc_out = r"D:\NEW_WORKING\MSPA_rc_area" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
-rc_type = "area"  # "edge" or "area"sent
-########### should set up remap values here instead of inside of the function - i was lazy 
-#remap 1 =
-# remap 2 = 
+rc_in = r"D:\NEW_WORKING\MSPA_results_P" # Input directory with rasters to reclassify
+edge_rc_out = r"D:\NEW_WORKING\MSPA_rc_edge" # Output directory for edge reclassification
+area_rc_out = r"D:\NEW_WORKING\MSPA_rc_area" # Output directory for area reclassification
+rc_type = "area"  # Select type: "edge" or "area"
+# Note: patch number is not reclassified, since it is derived from area using RegionGroup
 
-# RegionGroup
-rg_out = r"D:\NEW_WORKING\rg"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\rg" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
-neighbor="EIGHT"
-grouping = "within"
-link = "ADD_LINK"
+# RegionGroup- only to be run on area to calculate patch number
+rg_out = r"D:\NEW_WORKING\rg" # Output directory for region group results
+neighbor="EIGHT" # Specifies neighbor connectivity: "FOUR" or "EIGHT"
+grouping = "within" # Assigns a zone for each group of connected cells
+link = "ADD_LINK" # Assings an ID to each group of connected cells (each group has a unique ID)
+# Note: Input is area_rc_out by default, which is how the patch number is derived from area
 
-## Reclass RG
-rc_rg_in = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\rg"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rg_reclass"
-rc_rg_out = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\rg_rc" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_out"
+# Reclass Region Group- only to be used to set background values to 0
+rc_rg_in = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\rg" # Input directory for reclass region group
+rc_rg_out = r"D:\Mikayla_RA\RA_S25\NEW_WORKING\rg_rc" # Output directory for reclass region group
 
 # Moving window
-edge_mw_in = r"D:\NEW_WORKING\MSPA_rc_edge" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_edge"
-area_mw_in = r"D:\NEW_WORKING\MSPA_rc_area"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rc_area" # r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rc_area"
-pn_mw_in = r"D:\NEW_WORKING\rg_rc"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_rg_patchnum_1" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_rg_patchnum"
-mw_out = r"D:\NEW_WORKING\mw_results"#r"S:\Mikayla\DATA\Projects\AF\Time_Series\mw_results" #r"M:\MW_RESULTS" #r"D:\Mikayla_RA\RA_S25\Time_Series\mw"
-mw_type = "area"  # "edge", "area", or "pn"
+edge_mw_in = r"D:\NEW_WORKING\MSPA_rc_edge" # Input folder for data that will be used for edge moving window
+area_mw_in = r"D:\NEW_WORKING\MSPA_rc_area" # Input folder for data that will be used for area moving window
+pn_mw_in = r"D:\NEW_WORKING\rg_rc" # Input folder for data that will be used for patch number moving window
+mw_out = r"D:\NEW_WORKING\mw_results" # Output folder to hold moving window results
+mw_type = "area"  # Select type: either "edge", "area", or "pn"
 mw_radius = 1000
-stat = "SUM"  # VARIETY # SUM
-
-# Reclass Region Group
-rc_rg_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_in"  # Input directory for reclass region group
-rc_rg_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\temp_rc_rg_out2"  # Output directory for reclass region group
-
-
-# TEST- TRY THIS OUT ###################################################
-
-# masked rastets
-# input (area mw)
-raster_input = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_mw_area" #r"D:\NEW_WORKING\MSPA_mw_area" # need to change this for each type!!!!!!!!!!!!
-# mask
-mask = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask\binary_mask.tif"
-# output
-mw_masked_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_mw_masked2" #r"D:\NEW_WORKING\MSPA_mw_masked" #r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_masked" #r"D:\Mikayla_RA\RA_S25\Time_Series\MSPA_mw_masked"
+stat = "SUM"  # Select statistics type: "VARIETY", or "SUM"
 
 #########################################    
 
@@ -175,38 +139,6 @@ def process_rasters(process_func, input_dir, use_multiprocessing=False, **kwargs
     return outputs
     
 #########################################    
-
-def reproject_raster(input_raster, output_dir, reference_raster, resampling):
-    """Project a single raster using a reference raster for coordinate system and cell size"""
-    try:
-        basename = os.path.basename(input_raster)
-        year = get_year(basename)
-        output_path = os.path.join(output_dir, f"{year}P.tif")
-        
-        if not arcpy.Exists(output_path):
-            print(f"Projecting {basename}...")
-            
-            # Set environment variables
-            arcpy.env.outputCoordinateSystem = arcpy.Describe(reference_raster).spatialReference
-            arcpy.env.snapRaster = reference_raster
-            arcpy.env.pyramid = "NONE"
-            arcpy.env.extent = arcpy.Describe(reference_raster).extent
-            arcpy.env.cellSize = reference_raster
-            
-            # Project raster
-            arcpy.management.ProjectRaster(
-                input_raster,
-                output_path,
-                arcpy.env.outputCoordinateSystem,
-                resampling,
-                arcpy.env.cellSize
-            )
-            print(f"Projection complete: {output_path}")
-        return output_path
-        
-    except Exception as e:
-        print(f"Reproject error: {str(e)}")
-        return None
 
 # clip function with NoData set to 0
 def clip_rasters(input_raster, output_dir=clip_out, clip_mask=clip_mask):
@@ -328,80 +260,22 @@ def moving_window(input_raster, output_dir=mw_out, type=mw_type, radius=mw_radiu
         print(f"Moving Window error: {str(e)}")
         return None 
 
-# THIS WORKS - used it to shrink binary mask so it would keep out weird edge issues
-# shrink_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
-# shrink_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
-# shrink_pixels = 40
-# def shrink_raster(input_raster, output_dir=shrink_out, pixels=shrink_pixels):
-#     """Shrinks a raster by specified number of pixels"""
-#     try:
-#         basename = os.path.basename(input_raster)
-#         output_path = os.path.join(output_dir, f"{os.path.splitext(basename)[0]}_shrink40.tif")
-        
-#         if not arcpy.Exists(output_path):
-#             print(f"Shrinking {basename} by {pixels} pixels")
-            
-#             # Use the Shrink tool with all required parameters
-#             shrunk = arcpy.sa.Shrink(
-#                 input_raster,
-#                 pixels,
-#                 1  # zone_values parameter - value to shrink (1 for binary masks)
-#             )
-            
-#             # Save with compression
-#             arcpy.env.compression = "LZW"
-#             shrunk.save(output_path)
-#             print(f"Shrink successful: {output_path}")
-#         return output_path
-#     except Exception as e:
-#         print(f"Shrink error: {str(e)}")
-#         return None
-
-# if __name__ == "__main__":
-#     print("Starting Processing")
-#       # Run shrink raster stage
-#     print("Starting Shrink")
-#     shrink_start = time.time()
-#     shrink_results = process_rasters(
-#         shrink_raster,
-#         shrink_in,
-#         use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-#         output_dir=shrink_out,
-#         pixels=shrink_pixels
-#     )
-#     shrink_duration = time.time() - shrink_start
-#     print(f"Shrink completed in {shrink_duration:.2f} seconds")
-
 # ==========
 if __name__ == "__main__":
     print("Starting Processing")
 
-    # ## Reproject raster stage
-    # print("Starting Reprojection")
-    # rpj_start = time.time()
-    # rpj_results = process_rasters(
-    #     reproject_raster,
-    #     rpj_in,
-    #     use_multiprocessing=True,
-    #     output_dir=rpj_out,
-    #     reference_raster=reference_raster,
-    #     resampling=rpj_resampling
+    # ## Run clip stage (if needed)
+    # print("Starting Clip")
+    # clip_start = time.time()
+    # clip_results = process_rasters(
+    #     clip_rasters, 
+    #     clip_in,
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+    #     output_dir=clip_out, 
+    #     clip_mask=clip_mask
     # )
-    # rpj_duration = time.time() - rpj_start
-    # print(f"Reprojection completed in {rpj_duration:.2f} seconds")
-    
-    # ## Run clip stage
-    print("Starting Clip")
-    clip_start = time.time()
-    clip_results = process_rasters(
-        clip_rasters, 
-        clip_in,
-        use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-        output_dir=clip_out, 
-        clip_mask=clip_mask
-    )
-    clip_duration = time.time() - clip_start
-    print(f"Clip completed in {clip_duration:.2f} seconds")
+    # clip_duration = time.time() - clip_start
+    # print(f"Clip completed in {clip_duration:.2f} seconds")
     
     # ## Run reclassification stage
     # print("Starting Reclassification")
@@ -430,6 +304,18 @@ if __name__ == "__main__":
     # )
     # rg_duration = time.time() - rg_start
     # print(f"RegionGroup completed in {rg_duration:.2f} seconds")
+    
+    ## Reclass region group raster to fix background values
+    # print("Starting Reclass Region Group")
+    # rc_rg_start = time.time()
+    # rc_rg_results = process_rasters(
+    #     rc_rg_rasters,
+    #     rc_rg_in,
+    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+    #     output_dir=rc_rg_out
+    # )
+    # rc_rg_duration = time.time() - rc_rg_start
+    # print(f"Reclass Region Group completed in {rc_rg_duration:.2f} seconds")
 
     ## Run moving window stage
     # print("Starting Moving Window")
@@ -445,21 +331,5 @@ if __name__ == "__main__":
     # )
     # mw_duration = time.time() - mw_start
     # print(f"Moving window completed in {mw_duration:.2f} seconds")
-    
-    ## Reclass region group raster to fix background values
-    # print("Starting Reclass Region Group")
-    # rc_rg_start = time.time()
-    # rc_rg_results = process_rasters(
-    #     rc_rg_rasters,
-    #     rc_rg_in,
-    #     use_multiprocessing=True,  # Set to True for multiprocessing.Pool
-    #     output_dir=rc_rg_out
-    # )
-    # rc_rg_duration = time.time() - rc_rg_start
-    # print(f"Reclass Region Group completed in {rc_rg_duration:.2f} seconds")
-    
-    # ## Total processing time
-    # total_time = time.time() - clip_start
-    # print(f"\nTotal processing time: {total_time:.2f} seconds")
     
     print("Processing complete!")

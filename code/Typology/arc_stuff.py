@@ -12,8 +12,6 @@
 #         vertical="NO_VERTICAL"
 #     )
 
-
-
 # this is to clip weird stuff from mspa
 # input: "S:\Mikayla\DATA\Projects\AF\NEW_WORKING\masked_test\1991_area_1km_p.tif"
 ## this input is the mspa_mw_area output but reprojected to have the same coordinate as the binary mask
@@ -24,13 +22,11 @@
 #     )
 # output_raster.save(r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\masked_test\1991_area_1km_p_con.tif")
 
-
 # BATCH PROCESSING FUNCTIONS BELOW
 import os
 import arcpy
 import multiprocessing
 from functools import partial
-
 
 # ArcPy setup
 arcpy.env.overwriteOutput = True
@@ -42,8 +38,6 @@ cell_size = "31.8869969551851 31.8869969551851"
 
 # South America Albers projection string
 SA_ALBERS = 'PROJCS["South_America_Albers_Equal_Area_Conic",GEOGCS["GCS_South_American_1969",DATUM["D_South_American_1969",SPHEROID["GRS_1967_Truncated",6378160.0,298.25]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-60.0],PARAMETER["Standard_Parallel_1",-5.0],PARAMETER["Standard_Parallel_2",-42.0],PARAMETER["Latitude_Of_Origin",-32.0],UNIT["Meter",1.0]]'
-
-
 
 def reproject_raster(input_raster, output_dir=None, cell_size=None, reference_raster=None):
     """Reproject a raster to South America Albers Equal Area Conic"""
@@ -170,3 +164,126 @@ if __name__ == "__main__":
     #     mask_raster=mask_path,
     #     output_dir=os.path.join(output_dir, "masked")
     # )
+    
+    
+    
+##################### reproject raster function from ArcPy_mw_for_MSPA.py (didn't work)
+
+# Reproject raster
+# rpj_in = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_pn\rc"#r"B:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area"
+# rpj_out = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_pn\rc_P"#r"B:\Mikayla\DATA\Projects\AF\Time_Series\area_p"
+# rpj_resampling = "BILINEAR" # Resampling type: "NEAREST", "BILINEAR", "CUBIC"
+# # environment variables for reprojection
+# snap_raster= r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area\1990_area_1km.tif"  # Snap raster for reprojection, set to None by default
+# cell_size="31.8869969551851 31.8869969551851"
+# # CRS - South America Albers Equal Area Conic
+# target_crs='PROJCS["South_America_Albers_Equal_Area_Conic",GEOGCS["GCS_1990_P_b1",DATUM["D_South_American_1969",SPHEROID["GRS_1967",6378160.0,298.25]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-60.0],PARAMETER["Standard_Parallel_1",-5.0],PARAMETER["Standard_Parallel_2",-42.0],PARAMETER["Latitude_Of_Origin",-32.0],UNIT["Meter",1.0]]'
+# rpj_ref = r"S:\Mikayla\DATA\Projects\AF\Time_Series\MSPA_mw_area\1990_area_1km.tif"  # Reference raster with target projection
+
+# Batch Project parameters
+reference_raster = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\MSPA_results\1990_.tif"
+rpj_in = r"S:\Mikayla\DATA\Projects\AF\5s_rerun\MSPA_results"  # Input directory with rasters to project
+rpj_out = r"S:\Mikayla\DATA\Projects\AF\5s_rerun\MSPA_results_P"  # Output directory for projected rasters
+rpj_resampling = "BILINEAR"  # Resampling method: "NEAREST", "BILINEAR", "CUBIC"
+
+# def reproject_raster(input_raster, output_dir, reference_raster, resampling):
+#     """Project a single raster using a reference raster for coordinate system and cell size"""
+#     try:
+#         basename = os.path.basename(input_raster)
+#         year = get_year(basename)
+#         output_path = os.path.join(output_dir, f"{year}P.tif")
+        
+#         if not arcpy.Exists(output_path):
+#             print(f"Projecting {basename}...")
+            
+#             # Set environment variables
+#             arcpy.env.outputCoordinateSystem = arcpy.Describe(reference_raster).spatialReference
+#             arcpy.env.snapRaster = reference_raster
+#             arcpy.env.pyramid = "NONE"
+#             arcpy.env.extent = arcpy.Describe(reference_raster).extent
+#             arcpy.env.cellSize = reference_raster
+            
+#             # Project raster
+#             arcpy.management.ProjectRaster(
+#                 input_raster,
+#                 output_path,
+#                 arcpy.env.outputCoordinateSystem,
+#                 resampling,
+#                 arcpy.env.cellSize
+#             )
+#             print(f"Projection complete: {output_path}")
+#         return output_path
+        
+#     except Exception as e:
+#         print(f"Reproject error: {str(e)}")
+#         return None
+
+if __name__ == "__main__":
+    print("Starting Processing")
+
+    # ## Reproject raster stage
+    # print("Starting Reprojection")
+    # rpj_start = time.time()
+    # rpj_results = process_rasters(
+    #     reproject_raster,
+    #     rpj_in,
+    #     use_multiprocessing=True,
+    #     output_dir=rpj_out,
+    #     reference_raster=reference_raster,
+    #     resampling=rpj_resampling
+    # )
+    # rpj_duration = time.time() - rpj_start
+    # print(f"Reprojection completed in {rpj_duration:.2f} seconds")
+    
+    # ## Total processing time
+    # total_time = time.time() - clip_start
+    # print(f"\nTotal processing time: {total_time:.2f} seconds")
+    
+    print("Processing complete!")
+    
+    
+    
+############################# shrinking mask to fit within raster with weird edges
+# THIS WORKS - used it to shrink binary mask so it would keep out weird edge issues
+# shrink_in = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
+# shrink_out = r"S:\Mikayla\DATA\Projects\AF\NEW_WORKING\binary_mask" 
+# shrink_pixels = 40
+# def shrink_raster(input_raster, output_dir=shrink_out, pixels=shrink_pixels):
+#     """Shrinks a raster by specified number of pixels"""
+#     try:
+#         basename = os.path.basename(input_raster)
+#         output_path = os.path.join(output_dir, f"{os.path.splitext(basename)[0]}_shrink40.tif")
+        
+#         if not arcpy.Exists(output_path):
+#             print(f"Shrinking {basename} by {pixels} pixels")
+            
+#             # Use the Shrink tool with all required parameters
+#             shrunk = arcpy.sa.Shrink(
+#                 input_raster,
+#                 pixels,
+#                 1  # zone_values parameter - value to shrink (1 for binary masks)
+#             )
+            
+#             # Save with compression
+#             arcpy.env.compression = "LZW"
+#             shrunk.save(output_path)
+#             print(f"Shrink successful: {output_path}")
+#         return output_path
+#     except Exception as e:
+#         print(f"Shrink error: {str(e)}")
+#         return None
+
+# if __name__ == "__main__":
+#     print("Starting Processing")
+#       # Run shrink raster stage
+#     print("Starting Shrink")
+#     shrink_start = time.time()
+#     shrink_results = process_rasters(
+#         shrink_raster,
+#         shrink_in,
+#         use_multiprocessing=True,  # Set to True for multiprocessing.Pool
+#         output_dir=shrink_out,
+#         pixels=shrink_pixels
+#     )
+#     shrink_duration = time.time() - shrink_start
+#     print(f"Shrink completed in {shrink_duration:.2f} seconds")

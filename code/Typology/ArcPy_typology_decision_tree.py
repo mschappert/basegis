@@ -258,20 +258,14 @@ def reclassify_typology(input_dir, output_dir):
             # Build raster attribute table
             arcpy.management.BuildRasterAttributeTable(output_path)
             
-            # Add typology and original value fields
+            # Add typology field
             arcpy.management.AddField(output_path, "TYPOLOGY", "TEXT", field_length=50) # adds typology name field
-            arcpy.management.AddField(output_path, "ORIGINAL_VALUE", "SHORT") # preserve original values
-            
-            # Create reverse lookup for original values
-            original_lookup = {new_val: [old_val for old_val, nv in recode_map.items() if nv == new_val] for new_val in set(recode_map.values())}
-            
-            # Update fields with cursor
-            with arcpy.da.UpdateCursor(output_path, ["Value", "TYPOLOGY", "ORIGINAL_VALUE"]) as cursor:
+
+            # Update field with cursor
+            with arcpy.da.UpdateCursor(output_path, ["Value", "TYPOLOGY"]) as cursor:
                 for row in cursor:
                     if row[0] in typology_labels:
                         row[1] = typology_labels[row[0]]
-                        # For original value, use first occurrence if multiple map to same new value
-                        row[2] = original_lookup[row[0]][0] if row[0] in original_lookup else None
                         cursor.updateRow(row)
             
             print(f"Typology reclassification successful: {output_path}")

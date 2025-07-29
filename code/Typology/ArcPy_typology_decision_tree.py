@@ -61,15 +61,79 @@ def get_year(filename):
     return match.group(1) if match else ""
 
 # Remap- Time Interval
-def remap_raster(input_raster, output_dir, metric):
+# def remap_raster(input_raster, output_dir, metric):
+#     """
+#     Remap raster values based on the specified metric (patch, area, edge).
+#     """
+#     try:
+#         arcpy.env.workspace = input_raster
+#         rasters = arcpy.ListRasters()
+#         for raster in rasters:
+        
+#             basename = os.path.basename(input_raster)
+#             year = get_year(basename)
+            
+#             # Define remap rules based on the metric
+#             if metric == "pn":
+#                 output_path = os.path.join(output_dir, f"{year}_pn_rmp.tif")
+#                 remap_rules = [
+#                     (-70, -1.01, 100),
+#                     (-1, -0.11, 200),
+#                     (-0.1, 0.1, "NODATA"),
+#                     (0.11, 1, 200),
+#                     (1.01, 70, 300)
+#                 ]
+#                 # Create a remap object
+#                 remap = arcpy.sa.RemapRange(remap_rules)
+#                 # Perform the remapping
+#                 output_raster = arcpy.sa.Reclassify(input_raster, "Value", remap, "NODATA") #0
+#             elif metric == "area":
+#                 output_path = os.path.join(output_dir, f"{year}_area_rmp.tif")
+#                 remap_rules = [
+#                     (-999, -1.01, 10),
+#                     (-1, -0.101, 20),
+#                     (-0.1, 0.1, "NODATA"),
+#                     (0.101, 1, 20),
+#                     (1.01, 999, 30)
+#                 ]
+#                 # Create a remap object with NODATA for missing values
+#                 remap = arcpy.sa.RemapRange(remap_rules) # ,"NODATA"
+#                 # Perform the remapping
+#                 output_raster = arcpy.sa.Reclassify(input_raster, "Value", remap,"NODATA") #0
+#             elif metric == "edge":
+#                 output_path = os.path.join(output_dir, f"{year}_edge_rmp.tif")
+#                 remap_rules = [
+#                     (-70, -1.01, 1),
+#                     (-1, -0.11, 2),
+#                     (-0.1, 0.1, "NODATA"),
+#                     (0.11, 1, 2),
+#                     (1.01, 70, 3)
+#                 ]
+#                 # Create a remap object
+#                 remap = arcpy.sa.RemapRange(remap_rules)
+#                 # Perform the remapping
+#                 output_raster = arcpy.sa.Reclassify(input_raster, "Value", remap, "NODATA") #0
+#             else:
+#                 raise ValueError("Invalid metric specified: {}".format(metric))
+
+#             if not arcpy.Exists(output_path):
+#                 output_raster.save(output_path)
+#                 print(f"Remapped successful: {output_path}")
+#         return output_path
+#     except Exception as e:
+#         print(f"Remap error: {str(e)}")
+#         return None
+    
+def remap_raster(input_dir, output_dir, metric):
     """
     Remap raster values based on the specified metric (patch, area, edge).
     """
     try:
+        arcpy.env.workspace = input_dir
         rasters = arcpy.ListRasters()
         for raster in rasters:
-        
-            basename = os.path.basename(input_raster)
+            input_raster_path = os.path.join(input_dir, raster)
+            basename = os.path.basename(input_raster_path)
             year = get_year(basename)
             
             # Define remap rules based on the metric
@@ -82,10 +146,8 @@ def remap_raster(input_raster, output_dir, metric):
                     (0.11, 1, 200),
                     (1.01, 70, 300)
                 ]
-                # Create a remap object
                 remap = arcpy.sa.RemapRange(remap_rules)
-                # Perform the remapping
-                output_raster = arcpy.sa.Reclassify(input_raster, "Value", remap, "NODATA") #0
+                output_raster = arcpy.sa.Reclassify(input_raster_path, "Value", remap, "NODATA")
             elif metric == "area":
                 output_path = os.path.join(output_dir, f"{year}_area_rmp.tif")
                 remap_rules = [
@@ -95,10 +157,8 @@ def remap_raster(input_raster, output_dir, metric):
                     (0.101, 1, 20),
                     (1.01, 999, 30)
                 ]
-                # Create a remap object with NODATA for missing values
-                remap = arcpy.sa.RemapRange(remap_rules) # ,"NODATA"
-                # Perform the remapping
-                output_raster = arcpy.sa.Reclassify(input_raster, "Value", remap,"NODATA") #0
+                remap = arcpy.sa.RemapRange(remap_rules)
+                output_raster = arcpy.sa.Reclassify(input_raster_path, "Value", remap, "NODATA")
             elif metric == "edge":
                 output_path = os.path.join(output_dir, f"{year}_edge_rmp.tif")
                 remap_rules = [
@@ -108,20 +168,19 @@ def remap_raster(input_raster, output_dir, metric):
                     (0.11, 1, 2),
                     (1.01, 70, 3)
                 ]
-                # Create a remap object
                 remap = arcpy.sa.RemapRange(remap_rules)
-                # Perform the remapping
-                output_raster = arcpy.sa.Reclassify(input_raster, "Value", remap, "NODATA") #0
+                output_raster = arcpy.sa.Reclassify(input_raster_path, "Value", remap, "NODATA")
             else:
                 raise ValueError("Invalid metric specified: {}".format(metric))
 
             if not arcpy.Exists(output_path):
                 output_raster.save(output_path)
                 print(f"Remapped successful: {output_path}")
-        return output_path
+        return True
     except Exception as e:
         print(f"Remap error: {str(e)}")
         return None
+
 
 def combine_by_year(input_dir, output_dir):
     """Automatically combine edge, area, and patch rasters by year."""
@@ -247,11 +306,11 @@ if __name__ == "__main__":
     # print(f"Combining completed in {c_duration:.2f} seconds")
     
     ## Reclassify Combined Raster and Add Typology Names
-    print("Starting reclassification process...")
-    rc_start = time.time()
-    reclassify_typology(
-        input_dir= rc_input,
-        output_dir= rc_output
-    )
-    rc_duration = time.time() - rc_start
-    print(f"Reclassification completed in {rc_duration:.2f} seconds")
+    # print("Starting reclassification process...")
+    # rc_start = time.time()
+    # reclassify_typology(
+    #     input_dir= rc_input,
+    #     output_dir= rc_output
+    # )
+    # rc_duration = time.time() - rc_start
+    # print(f"Reclassification completed in {rc_duration:.2f} seconds")

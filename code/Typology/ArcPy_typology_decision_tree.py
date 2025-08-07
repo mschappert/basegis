@@ -151,11 +151,11 @@ def remap_raster(input_dir, output_dir, metric):
             elif metric == "area":
                 output_path = os.path.join(output_dir, f"{year}_area_rmp.tif")
                 remap_rules = [
-                    (-999, -1.01, 10),
+                    (-70, -1.01, 10),
                     (-1, -0.101, 20),
                     (-0.1, 0.1, "NODATA"),
                     (0.101, 1, 20),
-                    (1.01, 999, 30)
+                    (1.01, 70, 30)
                 ]
                 remap = arcpy.sa.RemapRange(remap_rules)
                 output_raster = arcpy.sa.Reclassify(input_raster_path, "Value", remap, "NODATA")
@@ -278,6 +278,16 @@ def reclassify_typology(input_dir, output_dir):
 if __name__ == "__main__":
     print("Starting Processing")
     
+    ## Remap Raster
+    # print("Starting remapping process...")
+    # rmp_start = time.time()
+    # rmp_results = remap_raster(
+    #     input_raster=input_raster,
+    #     output_dir=output_dir,
+    #     metric=metric_type
+    # )
+    # rmp_duration = time.time() - rmp_start
+    # print(f"Reamp completed in {rmp_duration:.2f} seconds")
     ## Remap Raster
     # print("Starting remapping process...")
     # rmp_start = time.time()

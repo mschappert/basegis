@@ -110,7 +110,7 @@ docker run <IMAGE ID or NAME:TAG>
 * Connects local machine to image
 ```
   cd /mnt/c/Users/username/wherever_repository_is/basegis/
-  docker run -p 8888:8888 -p 8787:8787 -v $(pwd):/home/gisuser/data/ -it basegis # Do not alter this line
+  docker run -p 8888:8888 -p 8787:8787 -v $(pwd):/home/gisuser/code/ -it basegis # Do not alter this line
 ```
 
 # Let's Start Coding!

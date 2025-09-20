@@ -2,27 +2,36 @@ name: base_gis
 channels:
   - conda-forge
 dependencies:
-  - jupyterlab=4.2.5
-  - pystac-client=0.7.5
-  - planetary-computer=1.0.0
-  - leafmap=0.38.5
-  - matplotlib
-  - dask=2024.9.1
-  - dask-labextension
-  - dask-geopandas=0.4.2
-  - distributed=2024.9.1
-  - rioxarray=0.17.0
-  - xarray=2024.10.0
-  - pooch=1.8.2
-  - scipy=1.14.1
-  - netcdf4=1.7.2
-  - geopandas=1.0.1
-  - geodatasets=2024.8.0
-  - cartopy=0.22.0
-  - shapely=2.0.5
-  - boto3 #=1.35.54
-  - bottleneck
-  - stackstac=0.5.0
-  - rasterio
-  - gdal
-  - openpyxl
+  # Parallelization and performance
+  - bottleneck         # performance optimization
+  - dask=2024.9.1      # parallelization
+  - distributed=2024.9.1  # parallelization scheduler
+  - dask-labextension  # Dask for JupyterLab
+  - dask-geopandas=0.4.2  # parallelization for GeoPandas
+  # Cloud
+  - boto3              # AWS cloud interaction #=1.35.54
+  - planetary-computer=1.0.0  # Azure planetary data client
+  - pystac-client=0.7.5  # STAC API client for Earth observation data
+  - geodatasets=2024.8.0 # spatial datasets
+  # Data Management & formats 
+  - pooch=1.8.2        # data file download manager
+  - openpyxl           # Excel file reading/writing
+  - netcdf4=1.7.2      # netCDF file support
+  - stackstac=0.5.0    # cloud-optimized GeoTIFF stack processing
+  - xarray=2024.10.0   # multi-dimensional arrays with labels
+  - rioxarray
+  - gdal               # raster/vector geospatial data handling
+  # Plotting and mapping
+  - cartopy            # mapping and geospatial visualization
+  - leafmap=0.38.5     # interactive mapping with Jupyter
+  - matplotlib         # plotting
+  # Vector & Raster
+  - shapely=2.0.5      # geometric operations on vector data
+  - geopandas=1.0.1    # vector data operations
+  - numpy              # numerical computing and array ops
+  - rasterio           # raster data I/O and processing
+  # Machine Learning/Computing
+  - scikit-learn       # machine learning and clustering
+  - scipy=1.14.1       # scientific computing library
+  # Jupyter environment
+  - jupyterlab=4.2.5   # notebook environment & interface
